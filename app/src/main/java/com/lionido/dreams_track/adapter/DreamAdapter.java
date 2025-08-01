@@ -25,6 +25,14 @@ public class DreamAdapter extends RecyclerView.Adapter<DreamAdapter.DreamViewHol
         void onDreamClick(Dream dream);
     }
 
+    public interface OnDreamDeleteListener {
+        void onDreamDelete(Dream dream, int position);
+    }
+    private OnDreamDeleteListener deleteListener;
+    public void setOnDreamDeleteListener(OnDreamDeleteListener listener) {
+        this.deleteListener = listener;
+    }
+
     public DreamAdapter(List<Dream> dreamsList, OnDreamClickListener listener) {
         this.dreamsList = dreamsList;
         this.listener = listener;
@@ -42,11 +50,23 @@ public class DreamAdapter extends RecyclerView.Adapter<DreamAdapter.DreamViewHol
     public void onBindViewHolder(@NonNull DreamViewHolder holder, int position) {
         Dream dream = dreamsList.get(position);
         holder.bind(dream);
+        holder.itemView.setOnLongClickListener(v -> {
+            if (deleteListener != null) {
+                deleteListener.onDreamDelete(dream, position);
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override
     public int getItemCount() {
         return dreamsList.size();
+    }
+
+    public void removeDream(int position) {
+        dreamsList.remove(position);
+        notifyItemRemoved(position);
     }
 
     class DreamViewHolder extends RecyclerView.ViewHolder {
