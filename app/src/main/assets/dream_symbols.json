@@ -1,0 +1,290 @@
+[
+  {
+    "word": "вода",
+    "symbol": "water",
+    "interpretation": "Символ эмоций, подсознания, очищения. Спокойная вода — гармония, бурная — внутренний конфликт.",
+    "emotion": "emotional_flow"
+  },
+  {
+    "word": "падать",
+    "symbol": "falling",
+    "interpretation": "Чувство потери контроля, страха неудачи или нестабильности в жизни.",
+    "emotion": "fear"
+  },
+  {
+    "word": "летать",
+    "symbol": "flying",
+    "interpretation": "Свобода, желание вырваться из ограничений, духовный подъём.",
+    "emotion": "joy"
+  },
+  {
+    "word": "башня",
+    "symbol": "tower",
+    "interpretation": "Изоляция, амбиции, стремление к власти или знанию.",
+    "emotion": "isolation"
+  },
+  {
+    "word": "дверь",
+    "symbol": "door",
+    "interpretation": "Возможность, переход к новому этапу. Закрытая дверь — преграда.",
+    "emotion": "hope"
+  },
+  {
+    "word": "ключ",
+    "symbol": "key",
+    "interpretation": "Решение, доступ к скрытому знанию или эмоции.",
+    "emotion": "discovery"
+  },
+  {
+    "word": "лестница",
+    "symbol": "ladder",
+    "interpretation": "Постепенное продвижение к цели. Обрыв лестницы — провал.",
+    "emotion": "effort"
+  },
+  {
+    "word": "огонь",
+    "symbol": "fire",
+    "interpretation": "Страсть, гнев, разрушение или очищение.",
+    "emotion": "anger"
+  },
+  {
+    "word": "лес",
+    "symbol": "forest",
+    "interpretation": "Подсознание, запутанность, поиск пути. Густой лес — трудности.",
+    "emotion": "confusion"
+  },
+  {
+    "word": "дорога",
+    "symbol": "road",
+    "interpretation": "Путь в жизни. Разветвление — выбор.",
+    "emotion": "uncertainty"
+  },
+  {
+    "word": "мост",
+    "symbol": "bridge",
+    "interpretation": "Переход от одного состояния к другому.",
+    "emotion": "change"
+  },
+  {
+    "word": "зубы",
+    "symbol": "teeth",
+    "interpretation": "Страх старения, потеря силы или контроля.",
+    "emotion": "anxiety"
+  },
+  {
+    "word": "поезд",
+    "symbol": "train",
+    "interpretation": "Жизненный путь, расписание, необходимость следовать правилам.",
+    "emotion": "routine"
+  },
+  {
+    "word": "часы",
+    "symbol": "clock",
+    "interpretation": "Ограниченность времени, спешка, страх смерти.",
+    "emotion": "urgency"
+  },
+  {
+    "word": "зеркало",
+    "symbol": "mirror",
+    "interpretation": "Самоанализ, истина, отражение внутреннего состояния.",
+    "emotion": "reflection"
+  },
+  {
+    "word": "тень",
+    "symbol": "shadow",
+    "interpretation": "Подавленные стороны личности, страхи.",
+    "emotion": "fear"
+  },
+  {
+    "word": "собака",
+    "symbol": "dog",
+    "interpretation": "Верность, инстинкт, защита. Злая собака — угроза.",
+    "emotion": "loyalty"
+  },
+  {
+    "word": "кошка",
+    "symbol": "cat",
+    "interpretation": "Интуиция, независимость, мистика.",
+    "emotion": "mystery"
+  },
+  {
+    "word": "ребёнок",
+    "symbol": "child",
+    "interpretation": "Часть личности, связанная с наивностью, страхом или будущим.",
+    "emotion": "innocence"
+  },
+  {
+    "word": "смерть",
+    "symbol": "death",
+    "interpretation": "Конец этапа, трансформация, а не буквальная смерть.",
+    "emotion": "transformation"
+  },
+  {
+    "word": "школа",
+    "symbol": "school",
+    "interpretation": "Необходимость учиться, чувство несоответствия.",
+    "emotion": "inadequacy"
+  },
+  {
+    "word": "работа",
+    "symbol": "work",
+    "interpretation": "Обязанности, давление, самоидентификация через труд.",
+    "emotion": "pressure"
+  },
+  {
+    "word": "дом",
+    "symbol": "home",
+    "interpretation": "Безопасность, семья, внутреннее «я».",
+    "emotion": "safety"
+  },
+  {
+    "word": "замок",
+    "symbol": "castle",
+    "interpretation": "Защита, изоляция, внутренний дворец личности.",
+    "emotion": "isolation"
+  },
+  {
+    "word": "корабль",
+    "symbol": "ship",
+    "interpretation": "Путешествие по жизни, управление эмоциями.",
+    "emotion": "voyage"
+  },
+  {
+    "word": "пещера",
+    "symbol": "cave",
+    "interpretation": "Глубины подсознания, тайны, страх неизвестного.",
+    "emotion": "fear"
+  },
+  {
+    "word": "солнце",
+    "symbol": "sun",
+    "interpretation": "Свет, сознание, жизненная сила, успех.",
+    "emotion": "joy"
+  },
+  {
+    "word": "луна",
+    "symbol": "moon",
+    "interpretation": "Интуиция, женская энергия, тайна.",
+    "emotion": "mystery"
+  },
+  {
+    "word": "звезда",
+    "symbol": "star",
+    "interpretation": "Надежда, вдохновение, высшее предназначение.",
+    "emotion": "hope"
+  },
+  {
+    "word": "снег",
+    "symbol": "snow",
+    "interpretation": "Оцепенение, чистота, одиночество.",
+    "emotion": "stillness"
+  },
+  {
+    "word": "дождь",
+    "symbol": "rain",
+    "interpretation": "Очищение, грусть, обновление.",
+    "emotion": "sadness"
+  },
+  {
+    "word": "ветер",
+    "symbol": "wind",
+    "interpretation": "Изменения, вестник новостей, беспокойство.",
+    "emotion": "change"
+  },
+  {
+    "word": "огромный",
+    "symbol": "giant",
+    "interpretation": "Подавляющая сила, страх, чувство малозначительности.",
+    "emotion": "fear"
+  },
+  {
+    "word": "преследование",
+    "symbol": "chase",
+    "interpretation": "Бегство от проблемы, которую нужно лицом к лицу.",
+    "emotion": "fear"
+  },
+  {
+    "word": "нагота",
+    "symbol": "nudity",
+    "interpretation": "Уязвимость, страх быть раскрытым.",
+    "emotion": "shame"
+  },
+  {
+    "word": "ограничение",
+    "symbol": "trapped",
+    "interpretation": "Чувство ловушки, невозможность действовать.",
+    "emotion": "despair"
+  },
+  {
+    "word": "птица",
+    "symbol": "bird",
+    "interpretation": "Свобода, дух, послание из подсознания.",
+    "emotion": "freedom"
+  },
+  {
+    "word": "змея",
+    "symbol": "snake",
+    "interpretation": "Изменение, искушение, скрытая угроза.",
+    "emotion": "danger"
+  },
+  {
+    "word": "цветок",
+    "symbol": "flower",
+    "interpretation": "Рост, красота, хрупкость, раскрытие личности.",
+    "emotion": "beauty"
+  },
+  {
+    "word": "книга",
+    "symbol": "book",
+    "interpretation": "Знание, прошлое, скрытая информация.",
+    "emotion": "wisdom"
+  },
+  {
+    "word": "карта",
+    "symbol": "map",
+    "interpretation": "Поиск пути, необходимость ориентироваться в жизни.",
+    "emotion": "uncertainty"
+  },
+  {
+    "word": "телефон",
+    "symbol": "phone",
+    "interpretation": "Связь, попытка донести что-то важное.",
+    "emotion": "connection"
+  },
+  {
+    "word": "машина",
+    "symbol": "car",
+    "interpretation": "Контроль над жизнью. Поломка — кризис.",
+    "emotion": "control"
+  },
+  {
+    "word": "замок",
+    "symbol": "lock",
+    "interpretation": "Преграда, секрет, необходимость найти решение.",
+    "emotion": "barrier"
+  },
+  {
+    "word": "свет",
+    "symbol": "light",
+    "interpretation": "Понимание, просветление, надежда.",
+    "emotion": "clarity"
+  },
+  {
+    "word": "тьма",
+    "symbol": "darkness",
+    "interpretation": "Неизвестность, страх, подавленные эмоции.",
+    "emotion": "fear"
+  },
+  {
+    "word": "голос",
+    "symbol": "voice",
+    "interpretation": "Внутреннее «я», интуиция, необходимость быть услышанным.",
+    "emotion": "expression"
+  },
+  {
+    "word": "отражение",
+    "symbol": "reflection",
+    "interpretation": "Самоанализ, двойственность личности.",
+    "emotion": "duality"
+  }
+]
