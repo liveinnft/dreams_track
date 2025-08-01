@@ -5,7 +5,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import androidx.core.content.FileProvider;
+import com.lionido.dreams_track.utils.ExportUtils;
+import java.io.File;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +23,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.ItemTouchHelper;
 
 import com.lionido.dreams_track.activity.RecordDreamActivity;
 import com.lionido.dreams_track.adapter.DreamAdapter;
@@ -33,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_CODE = 123;
     private Button recordButton;
+    private ImageButton atlasButton;
     private RecyclerView dreamsRecyclerView;
     private DreamAdapter dreamAdapter;
     private List<Dream> dreamsList;
@@ -67,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeViews() {
         recordButton = findViewById(R.id.btn_record_dream);
+        atlasButton = findViewById(R.id.btn_atlas);
 
         recordButton.setOnClickListener(v -> {
             if (checkPermissions()) {
@@ -74,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 requestPermissions();
             }
+        });
+
+        atlasButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, com.lionido.dreams_track.activity.AtlasActivity.class);
+            startActivity(intent);
         });
     }
 
@@ -85,10 +100,25 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("dream_id", dream.getId());
             startActivity(intent);
         });
-
+        dreamAdapter.setOnDreamDeleteListener((dream, position) -> {
+            deleteDreamFromDb(dream, position);
+        });
         dreamsRecyclerView = findViewById(R.id.recycler_dreams);
         dreamsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dreamsRecyclerView.setAdapter(dreamAdapter);
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                Dream dream = dreamsList.get(position);
+                deleteDreamFromDb(dream, position);
+            }
+        };
+        new ItemTouchHelper(simpleCallback).attachToRecyclerView(dreamsRecyclerView);
     }
 
     private void startRecordActivity() {
@@ -150,11 +180,52 @@ public class MainActivity extends AppCompatActivity {
         return dream;
     }
 
+    private void deleteDreamFromDb(Dream dream, int position) {
+        executor.execute(() -> {
+            dreamDao.delete(new DreamEntity(dream.getText(), dream.getAudioPath(), ""));
+            runOnUiThread(() -> {
+                dreamAdapter.removeDream(position);
+                Toast.makeText(this, "Сон удалён", Toast.LENGTH_SHORT).show();
+            });
+        });
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         if (executor != null) {
             executor.shutdown();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_export_txt) {
+            exportDreams("txt");
+            return true;
+        } else if (item.getItemId() == R.id.action_export_json) {
+            exportDreams("json");
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    private void exportDreams(String type) {
+        executor.execute(() -> {
+            try {
+                List<DreamEntity> dreamEntities = dreamDao.getAllDreams();
+                File file = type.equals("txt") ? ExportUtils.exportDreamsToTxt(this, dreamEntities) : ExportUtils.exportDreamsToJson(this, dreamEntities);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Экспортировано: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(this, "Ошибка экспорта: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        });
     }
 }

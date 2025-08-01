@@ -165,4 +165,15 @@
 
     </LinearLayout>
 
+    <ImageButton
+        android:id="@+id/btn_atlas"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginTop="16dp"
+        android:src="@android:drawable/ic_menu_mapmode"
+        android:background="@drawable/button_secondary"
+        android:contentDescription="Облако слов"
+        android:tint="@color/black" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
