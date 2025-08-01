@@ -2,4 +2,30 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Основные цвета приложения -->
+    <color name="background">#1A1A2E</color>
+    <color name="surface">#16213E</color>
+    <color name="primary">#0F3460</color>
+    <color name="accent">#E94560</color>
+    
+    <!-- Цвета текста -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B3FFFFFF</color>
+    <color name="text_hint">#80FFFFFF</color>
+    
+    <!-- Цвета кнопок -->
+    <color name="button_primary_bg">#E94560</color>
+    <color name="button_secondary_bg">#2A2A3E</color>
+    
+    <!-- Цвета для эмоций -->
+    <color name="emotion_fear">#FF6B6B</color>
+    <color name="emotion_joy">#4ECDC4</color>
+    <color name="emotion_sadness">#45B7D1</color>
+    <color name="emotion_anger">#FF8A80</color>
+    <color name="emotion_surprise">#FFD93D</color>
+    <color name="emotion_calm">#6BCF7F</color>
+    <color name="emotion_love">#FF69B4</color>
+    <color name="emotion_shame">#9C27B0</color>
+    <color name="emotion_despair">#795548</color>
 </resources>
