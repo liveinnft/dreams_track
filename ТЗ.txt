@@ -1,0 +1,748 @@
+
+# 🌙 **Проект: "Сонный переводчик"**  
+### Приложение для анализа и интерпретации снов на Android (Java)
+
+---
+
+## 🔹 1. Общая концепция
+
+Пользователь утром диктует сон в телефон. Приложение:
+- записывает голос,
+- распознаёт речь,
+- превращает в текст,
+- анализирует ключевые образы и эмоции,
+- предлагает интерпретации на основе психологии, мифологии и символики,
+- визуализирует повторяющиеся темы,
+- хранит всё локально — **никаких серверов, без облака, без регистрации**.
+
+> Это **личный дневник снов с интеллектуальным анализом**, работающий полностью на устройстве.
+
+---
+
+## 🔹 2. Основные возможности
+
+| Функция | Описание |
+|--------|--------|
+| 🎤 Голосовой ввод | Нажал кнопку — говоришь сон, отпустил — запись закончилась |
+| 📝 Текстовая транскрипция | Голос автоматически превращается в текст |
+| 🔍 Анализ символов | Выделение ключевых образов: *вода, падение, лестница, преследование* |
+| 💬 Интерпретация | Пояснения к символам: "Вода — символ подавленных эмоций" |
+| 🎨 Сонный атлас | Визуализация частоты символов (облако слов) |
+| 🗓 История снов | Просмотр всех снов по датам |
+| 🧠 Эмоциональный тон | Определение: сон был тревожным, радостным, странным? |
+| 🔐 Приватность | Все данные — только на устройстве. Никаких аккаунтов |
+
+---
+
+## 🔹 3. Архитектура приложения (чистый Java)
+
+### 📱 Стек технологий
+
+| Категория | Технология / Библиотека | Обоснование |
+|---------|------------------------|------------|
+| Язык | **Java 8+** | Требование |
+| UI | **Android XML + ViewBinding** | Стабильно, поддерживается, подходит для Java |
+| База данных | **Room Persistence Library** | Надёжно, типобезопасно, работает с Java |
+| Аудио | **Android MediaRecorder + SpeechRecognizer** | Встроенные API, не требуют интернета |
+| NLP | **Локальный анализ на Java** (регулярные выражения, словари) | Без ML-моделей, полностью автономно |
+| Визуализация | **Canvas + кастомный View** или **AndroidPlot** | Для облака слов и графиков |
+| Хранение | **Internal Storage** (аудио), **Room** (текст, метаданные) | Без внешних серверов |
+
+---
+
+## 🔹 4. Структура приложения
+
+### 📁 Папки проекта (Java-пакеты)
+
+```
+com.dreamtranslator
+├── activity          // Главные экраны
+│   ├── MainActivity.java
+│   ├── RecordDreamActivity.java
+│   ├── DreamListActivity.java
+│   └── AtlasActivity.java
+│
+├── fragment          // Фрагменты (если используется)
+│
+├── service           // Фоновые задачи
+│   └── AudioRecordService.java (опционально)
+│
+├── database          // Room: DAO, Entity, Database
+│   ├── DreamDao.java
+│   ├── DreamEntity.java
+│   └── AppDatabase.java
+│
+├── model             // POJO-модели
+│   └── Dream.java (id, text, audioPath, timestamp, symbols, emotion)
+│
+├── utils             // Вспомогательные классы
+│   ├── SpeechHelper.java        // Работа с распознаванием
+│   ├── SymbolAnalyzer.java      // Поиск символов
+│   ├── EmotionDetector.java     // Определение эмоции
+│   └── WordCloudGenerator.java  // Генерация облака
+│
+├── assets            // JSON-словари
+│   └── dream_symbols.json
+│
+└── ui                // Кастомные View
+    └── WordCloudView.java
+```
+
+---
+
+## 🔹 5. Ключевые компоненты
+
+### 1. **Голосовой ввод (SpeechRecognizer)**
+
+```java
+// SpeechHelper.java
+Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU");
+intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Расскажи свой сон...");
+
+SpeechRecognizer speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
+speechRecognizer.setRecognitionListener(new RecognitionListener() {
+    @Override
+    public void onResults(Bundle results) {
+        ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        String transcript = matches.get(0); // Лучший результат
+        // Передать в анализ
+    }
+});
+```
+
+> ⚠️ Требует разрешения:  
+> `<uses-permission android:name="android.permission.RECORD_AUDIO" />`
+
+---
+
+### 2. **Хранение — Room (Java)**
+
+```java
+// DreamEntity.java
+@Entity(tableName = "dreams")
+public class DreamEntity {
+    @PrimaryKey(autoGenerate = true)
+    public int id;
+    public String text;
+    public String audioPath;
+    public long timestamp;
+    public String symbols; // JSON: ["water", "falling"]
+    public String emotion; // "fear", "joy", "confusion"
+}
+```
+
+```java
+// DreamDao.java
+@Dao
+public interface DreamDao {
+    @Insert
+    void insert(DreamEntity dream);
+
+    @Query("SELECT * FROM dreams ORDER BY timestamp DESC")
+    List<DreamEntity> getAllDreams();
+}
+```
+
+---
+
+### 3. **Анализ символов (SymbolAnalyzer.java)**
+
+```java
+// Загружаем словарь из assets/dream_symbols.json
+public class SymbolAnalyzer {
+    private Map<String, Symbol> symbolMap; // слово → символ
+
+    public List<Symbol> findSymbols(String text) {
+        List<Symbol> found = new ArrayList<>();
+        text = text.toLowerCase();
+
+        for (String key : symbolMap.keySet()) {
+            if (text.contains(key)) {
+                found.add(symbolMap.get(key));
+            }
+            // Можно улучшить: через регулярные выражения, лемматизацию (опционально)
+        }
+        return found;
+    }
+}
+```
+
+**Файл `dream_symbols.json`:**
+```json
+[
+  {
+    "word": "вода",
+    "symbol": "water",
+    "interpretation": "Символ эмоций, подсознания, очищения.",
+    "emotion": "emotional_flow"
+  },
+  {
+    "word": "падать",
+    "symbol": "falling",
+    "interpretation": "Чувство потери контроля, страха неудачи.",
+    "emotion": "fear"
+  }
+]
+```
+
+---
+
+### 4. **Определение эмоции (EmotionDetector.java)**
+
+Простой подход — по ключевым словам:
+
+```java
+private Map<String, String> emotionKeywords = new HashMap<>();
+// Заполняем: "страх" → "fear", "радость" → "joy", "тоска" → "sadness"
+
+public String detectEmotion(String text) {
+    text = text.toLowerCase();
+    Map<String, Integer> scores = new HashMap<>();
+
+    for (String word : emotionKeywords.keySet()) {
+        if (text.contains(word)) {
+            String emo = emotionKeywords.get(word);
+            scores.put(emo, scores.getOrDefault(emo, 0) + 1);
+        }
+    }
+
+    return scores.entrySet().stream()
+        .max(Map.Entry.comparingByValue())
+        .map(Map.Entry::getKey)
+        .orElse("neutral");
+}
+```
+
+---
+
+### 5. **Облако слов (WordCloudView.java)**
+
+Реализуется через `Canvas`:
+
+```java
+public class WordCloudView extends View {
+    private List<Word> words; // слово, частота, цвет
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        for (Word word : words) {
+            float size = 20 + word.frequency * 5; // масштабируем
+            paint.setTextSize(size);
+            float x = (float) (Math.random() * getWidth());
+            float y = (float) (Math.random() * getHeight());
+            canvas.drawText(word.text, x, y, paint);
+        }
+    }
+}
+```
+
+---
+
+## 🔹 6. Экраны приложения
+
+### 1. **MainActivity**
+- Крупная кнопка: 🎤 "Записать сон"
+- Список последних снов (дата, первые 50 символов)
+- Иконка внизу: 🗺 "Атлас"
+
+### 2. **RecordDreamActivity**
+- Анимация звуковой волны
+- Кнопка: "Начать запись" → "Отпустите, чтобы остановить"
+- После записи — автоматический анализ
+
+### 3. **DreamDetailActivity**
+- Текст сна
+- Раздел: **Символы**: `#вода`, `#лестница` — с пояснениями
+- Раздел: **Эмоция**: "Тревога", "Радость"
+- Кнопка: "Удалить", "Назад"
+
+### 4. **AtlasActivity**
+- Облако слов (в центре)
+- Фильтры: "Только страхи", "Только радостные"
+- График: количество снов по неделям
+
+---
+
+## 🔹 7. Приватность и безопасность
+
+- **Нет интернета** — никаких разрешений на `INTERNET`
+- **Нет аккаунтов** — пользователь не вводит имя, email, телефон
+- **Аудио и текст** — только во внутреннем хранилище (`context.getFilesDir()`)
+- **Резервное копирование** — опционально: экспорт в `.txt` или `.json` (через `Intent.ACTION_CREATE_DOCUMENT`)
+
+---
+
+## 🔹 8. Что нужно для старта
+
+### 1. Подготовить
+- `dream_symbols.json` — 50–100 символов с интерпретациями
+- Дизайн экранов (можно вручную на бумаге или в Figma)
+- Иконка приложения (например, глаз с луной)
+
+### 2. Разработка (пошагово)
+1. Настроить Room + сущность `DreamEntity`
+2. Сделать `MainActivity` с кнопкой и списком
+3. Реализовать голосовой ввод через `SpeechRecognizer`
+4. Добавить `SymbolAnalyzer` и `EmotionDetector`
+5. Сделать экран деталей сна
+6. Реализовать `WordCloudView`
+7. Протестировать на устройстве
+
+---
+
+## 🔹 9. Пример: как работает анализ
+
+**Пользователь сказал:**  
+> "Я падал с высокой башни, вокруг была тьма, и я не мог кричать."
+
+**Результат:**
+- Символы: `падать`, `башня`, `тьма`
+- Эмоция: `страх`
+- Интерпретация:
+  - *Падение* — потеря контроля, страх неудачи.
+  - *Башня* — амбиции, изоляция.
+  - *Тьма* — неизвестность, подавленные страхи.
+
+---
+
+## 🔹 10. Дополнительно (по желанию)
+
+- **Ночной режим** — тёмная тема по умолчанию
+- **Экспорт сна** — сохранить в файл
+- **Поиск по снам** — "найти все сны с водой"
+- **Жест: свайп влево — удалить**
+
+
+Отлично! Сейчас сгенерирую:
+
+1. **Файл `dream_symbols.json`** — 50 ключевых символов снов с интерпретацией, эмоцией и ключевыми словами.
+2. **Пример класса `SymbolAnalyzer.java` на Java** — для поиска символов в тексте сна.
+
+---
+
+## 📦 1. `dream_symbols.json`
+
+Сохраните этот JSON в папку `app/src/main/assets/dream_symbols.json`
+
+```json
+[
+  {
+    "word": "вода",
+    "symbol": "water",
+    "interpretation": "Символ эмоций, подсознания, очищения. Спокойная вода — гармония, бурная — внутренний конфликт.",
+    "emotion": "emotional_flow"
+  },
+  {
+    "word": "падать",
+    "symbol": "falling",
+    "interpretation": "Чувство потери контроля, страха неудачи или нестабильности в жизни.",
+    "emotion": "fear"
+  },
+  {
+    "word": "летать",
+    "symbol": "flying",
+    "interpretation": "Свобода, желание вырваться из ограничений, духовный подъём.",
+    "emotion": "joy"
+  },
+  {
+    "word": "башня",
+    "symbol": "tower",
+    "interpretation": "Изоляция, амбиции, стремление к власти или знанию.",
+    "emotion": "isolation"
+  },
+  {
+    "word": "дверь",
+    "symbol": "door",
+    "interpretation": "Возможность, переход к новому этапу. Закрытая дверь — преграда.",
+    "emotion": "hope"
+  },
+  {
+    "word": "ключ",
+    "symbol": "key",
+    "interpretation": "Решение, доступ к скрытому знанию или эмоции.",
+    "emotion": "discovery"
+  },
+  {
+    "word": "лестница",
+    "symbol": "ladder",
+    "interpretation": "Постепенное продвижение к цели. Обрыв лестницы — провал.",
+    "emotion": "effort"
+  },
+  {
+    "word": "огонь",
+    "symbol": "fire",
+    "interpretation": "Страсть, гнев, разрушение или очищение.",
+    "emotion": "anger"
+  },
+  {
+    "word": "лес",
+    "symbol": "forest",
+    "interpretation": "Подсознание, запутанность, поиск пути. Густой лес — трудности.",
+    "emotion": "confusion"
+  },
+  {
+    "word": "дорога",
+    "symbol": "road",
+    "interpretation": "Путь в жизни. Разветвление — выбор.",
+    "emotion": "uncertainty"
+  },
+  {
+    "word": "мост",
+    "symbol": "bridge",
+    "interpretation": "Переход от одного состояния к другому.",
+    "emotion": "change"
+  },
+  {
+    "word": "зубы",
+    "symbol": "teeth",
+    "interpretation": "Страх старения, потеря силы или контроля.",
+    "emotion": "anxiety"
+  },
+  {
+    "word": "поезд",
+    "symbol": "train",
+    "interpretation": "Жизненный путь, расписание, необходимость следовать правилам.",
+    "emotion": "routine"
+  },
+  {
+    "word": "часы",
+    "symbol": "clock",
+    "interpretation": "Ограниченность времени, спешка, страх смерти.",
+    "emotion": "urgency"
+  },
+  {
+    "word": "зеркало",
+    "symbol": "mirror",
+    "interpretation": "Самоанализ, истина, отражение внутреннего состояния.",
+    "emotion": "reflection"
+  },
+  {
+    "word": "тень",
+    "symbol": "shadow",
+    "interpretation": "Подавленные стороны личности, страхи.",
+    "emotion": "fear"
+  },
+  {
+    "word": "собака",
+    "symbol": "dog",
+    "interpretation": "Верность, инстинкт, защита. Злая собака — угроза.",
+    "emotion": "loyalty"
+  },
+  {
+    "word": "кошка",
+    "symbol": "cat",
+    "interpretation": "Интуиция, независимость, мистика.",
+    "emotion": "mystery"
+  },
+  {
+    "word": "ребёнок",
+    "symbol": "child",
+    "interpretation": "Часть личности, связанная с наивностью, страхом или будущим.",
+    "emotion": "innocence"
+  },
+  {
+    "word": "смерть",
+    "symbol": "death",
+    "interpretation": "Конец этапа, трансформация, а не буквальная смерть.",
+    "emotion": "transformation"
+  },
+  {
+    "word": "школа",
+    "symbol": "school",
+    "interpretation": "Необходимость учиться, чувство несоответствия.",
+    "emotion": "inadequacy"
+  },
+  {
+    "word": "работа",
+    "symbol": "work",
+    "interpretation": "Обязанности, давление, самоидентификация через труд.",
+    "emotion": "pressure"
+  },
+  {
+    "word": "дом",
+    "symbol": "home",
+    "interpretation": "Безопасность, семья, внутреннее «я».",
+    "emotion": "safety"
+  },
+  {
+    "word": "замок",
+    "symbol": "castle",
+    "interpretation": "Защита, изоляция, внутренний дворец личности.",
+    "emotion": "isolation"
+  },
+  {
+    "word": "корабль",
+    "symbol": "ship",
+    "interpretation": "Путешествие по жизни, управление эмоциями.",
+    "emotion": "voyage"
+  },
+  {
+    "word": "пещера",
+    "symbol": "cave",
+    "interpretation": "Глубины подсознания, тайны, страх неизвестного.",
+    "emotion": "fear"
+  },
+  {
+    "word": "солнце",
+    "symbol": "sun",
+    "interpretation": "Свет, сознание, жизненная сила, успех.",
+    "emotion": "joy"
+  },
+  {
+    "word": "луна",
+    "symbol": "moon",
+    "interpretation": "Интуиция, женская энергия, тайна.",
+    "emotion": "mystery"
+  },
+  {
+    "word": "звезда",
+    "symbol": "star",
+    "interpretation": "Надежда, вдохновение, высшее предназначение.",
+    "emotion": "hope"
+  },
+  {
+    "word": "снег",
+    "symbol": "snow",
+    "interpretation": "Оцепенение, чистота, одиночество.",
+    "emotion": "stillness"
+  },
+  {
+    "word": "дождь",
+    "symbol": "rain",
+    "interpretation": "Очищение, грусть, обновление.",
+    "emotion": "sadness"
+  },
+  {
+    "word": "ветер",
+    "symbol": "wind",
+    "interpretation": "Изменения, вестник новостей, беспокойство.",
+    "emotion": "change"
+  },
+  {
+    "word": "огромный",
+    "symbol": "giant",
+    "interpretation": "Подавляющая сила, страх, чувство малозначительности.",
+    "emotion": "fear"
+  },
+  {
+    "word": "преследование",
+    "symbol": "chase",
+    "interpretation": "Бегство от проблемы, которую нужно лицом к лицу.",
+    "emotion": "fear"
+  },
+  {
+    "word": "нагота",
+    "symbol": "nudity",
+    "interpretation": "Уязвимость, страх быть раскрытым.",
+    "emotion": "shame"
+  },
+  {
+    "word": "ограничение",
+    "symbol": "trapped",
+    "interpretation": "Чувство ловушки, невозможность действовать.",
+    "emotion": "despair"
+  },
+  {
+    "word": "птица",
+    "symbol": "bird",
+    "interpretation": "Свобода, дух, послание из подсознания.",
+    "emotion": "freedom"
+  },
+  {
+    "word": "змея",
+    "symbol": "snake",
+    "interpretation": "Изменение, искушение, скрытая угроза.",
+    "emotion": "danger"
+  },
+  {
+    "word": "цветок",
+    "symbol": "flower",
+    "interpretation": "Рост, красота, хрупкость, раскрытие личности.",
+    "emotion": "beauty"
+  },
+  {
+    "word": "книга",
+    "symbol": "book",
+    "interpretation": "Знание, прошлое, скрытая информация.",
+    "emotion": "wisdom"
+  },
+  {
+    "word": "карта",
+    "symbol": "map",
+    "interpretation": "Поиск пути, необходимость ориентироваться в жизни.",
+    "emotion": "uncertainty"
+  },
+  {
+    "word": "телефон",
+    "symbol": "phone",
+    "interpretation": "Связь, попытка донести что-то важное.",
+    "emotion": "connection"
+  },
+  {
+    "word": "машина",
+    "symbol": "car",
+    "interpretation": "Контроль над жизнью. Поломка — кризис.",
+    "emotion": "control"
+  },
+  {
+    "word": "огонь",
+    "symbol": "fire",
+    "interpretation": "Страсть, гнев, разрушение или очищение.",
+    "emotion": "anger"
+  },
+  {
+    "word": "замок",
+    "symbol": "lock",
+    "interpretation": "Преграда, секрет, необходимость найти решение.",
+    "emotion": "barrier"
+  },
+  {
+    "word": "свет",
+    "symbol": "light",
+    "interpretation": "Понимание, просветление, надежда.",
+    "emotion": "clarity"
+  },
+  {
+    "word": "тьма",
+    "symbol": "darkness",
+    "interpretation": "Неизвестность, страх, подавленные эмоции.",
+    "emotion": "fear"
+  },
+  {
+    "word": "голос",
+    "symbol": "voice",
+    "interpretation": "Внутреннее «я», интуиция, необходимость быть услышанным.",
+    "emotion": "expression"
+  },
+  {
+    "word": "отражение",
+    "symbol": "reflection",
+    "interpretation": "Самоанализ, двойственность личности.",
+    "emotion": "duality"
+  }
+]
+```
+
+> ✅ **50 символов**, можно расширять.
+
+---
+
+## 💻 2. `SymbolAnalyzer.java` — анализатор символов (Java)
+
+```java
+// SymbolAnalyzer.java
+package com.dreamtranslator.utils;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.dreamtranslator.model.Symbol;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class SymbolAnalyzer {
+
+    private Context context;
+    private List<Symbol> symbols;
+
+    public SymbolAnalyzer(Context context) {
+        this.context = context;
+        this.symbols = loadSymbolsFromAsset();
+    }
+
+    private List<Symbol> loadSymbolsFromAsset() {
+        List<Symbol> list = new ArrayList<>();
+        try {
+            InputStream is = context.getAssets().open("dream_symbols.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+
+            String json = new String(buffer, "UTF-8");
+            JSONArray array = new JSONArray(json);
+
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject obj = array.getJSONObject(i);
+                Symbol symbol = new Symbol(
+                    obj.getString("word"),
+                    obj.getString("symbol"),
+                    obj.getString("interpretation"),
+                    obj.getString("emotion")
+                );
+                list.add(symbol);
+            }
+        } catch (IOException | JSONException e) {
+            Log.e("SymbolAnalyzer", "Ошибка загрузки символов", e);
+        }
+        return list;
+    }
+
+    public List<Symbol> findSymbolsInText(String text) {
+        List<Symbol> found = new ArrayList<>();
+        text = text.toLowerCase();
+
+        for (Symbol symbol : symbols) {
+            if (text.contains(symbol.getKeyword())) {
+                found.add(symbol);
+            }
+        }
+        return found;
+    }
+}
+```
+
+---
+
+## 📦 3. `Symbol.java` — модель символа
+
+```java
+// Symbol.java
+package com.dreamtranslator.model;
+
+public class Symbol {
+    private String keyword;
+    private String symbol;
+    private String interpretation;
+    private String emotion;
+
+    public Symbol(String keyword, String symbol, String interpretation, String emotion) {
+        this.keyword = keyword;
+        this.symbol = symbol;
+        this.interpretation = interpretation;
+        this.emotion = emotion;
+    }
+
+    // Геттеры
+    public String getKeyword() { return keyword; }
+    public String getSymbol() { return symbol; }
+    public String getInterpretation() { return interpretation; }
+    public String getEmotion() { return emotion; }
+}
+```
+
+---
+
+## ✅ Что дальше?
+
+1. Положи `dream_symbols.json` в `src/main/assets`
+2. Добавь классы `SymbolAnalyzer` и `Symbol`
+3. В `RecordDreamActivity` после распознавания вызови:
+   ```java
+   SymbolAnalyzer analyzer = new SymbolAnalyzer(this);
+   List<Symbol> foundSymbols = analyzer.findSymbolsInText(transcript);
+   ```
+4. Передай `foundSymbols` в экран деталей
+
