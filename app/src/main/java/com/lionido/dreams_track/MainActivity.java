@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 123;
     private Button recordButton;
     private RecyclerView dreamsRecyclerView;
+    private TextView emptyStateText;
     private DreamAdapter dreamAdapter;
     private List<Dream> dreamsList;
 
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private void initializeViews() {
         recordButton = findViewById(R.id.btn_record_dream);
         dreamsRecyclerView = findViewById(R.id.recycler_dreams);
+        emptyStateText = findViewById(R.id.tv_empty_state);
 
         recordButton.setOnClickListener(v -> {
             if (checkPermissions()) {
@@ -108,16 +110,25 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // TODO: Загрузить список снов из базы данных
+        // Загружаем список снов (пока пустой, будет заполняться после записи)
         loadDreams();
     }
 
     private void loadDreams() {
         // TODO: Загрузить сны из Room Database
-        // Пока что используем тестовые данные
+        // Пока что список пуст - сны будут добавляться после записи
         dreamsList.clear();
-        dreamsList.add(new Dream("Я летал над городом и видел красивые огни", null));
-        dreamsList.add(new Dream("Меня преследовал огромный волк в темном лесу", null));
         dreamAdapter.notifyDataSetChanged();
+        updateEmptyState();
+    }
+
+    private void updateEmptyState() {
+        if (dreamsList.isEmpty()) {
+            emptyStateText.setVisibility(View.VISIBLE);
+            dreamsRecyclerView.setVisibility(View.GONE);
+        } else {
+            emptyStateText.setVisibility(View.GONE);
+            dreamsRecyclerView.setVisibility(View.VISIBLE);
+        }
     }
 }
