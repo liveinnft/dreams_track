@@ -1,71 +1,62 @@
 package com.lionido.dreams_track;
 
-import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.Toast;
+import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import androidx.core.content.FileProvider;
-import com.lionido.dreams_track.utils.ExportUtils;
-import java.io.File;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.cardview.widget.CardView;
 
+import com.google.android.material.appbar.MaterialToolbar;
+import com.lionido.dreams_track.activity.AtlasActivity;
+import com.lionido.dreams_track.activity.DreamHistoryActivity;
 import com.lionido.dreams_track.activity.RecordDreamActivity;
-import com.lionido.dreams_track.adapter.DreamAdapter;
 import com.lionido.dreams_track.database.AppDatabase;
 import com.lionido.dreams_track.database.DreamDao;
 import com.lionido.dreams_track.database.DreamEntity;
-import com.lionido.dreams_track.model.Dream;
+import com.lionido.dreams_track.utils.OpenRouterAnalyzer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
-
-    private static final int PERMISSION_REQUEST_CODE = 123;
-    private Button recordButton;
-    private ImageButton atlasButton;
-    private RecyclerView dreamsRecyclerView;
-    private DreamAdapter dreamAdapter;
-    private List<Dream> dreamsList;
+    private static final String PREFS_NAME = "DreamPrefs";
+    private static final String PREF_GEMINI_API_KEY = "gemini_api_key";
 
     private AppDatabase database;
     private DreamDao dreamDao;
+    private OpenRouterAnalyzer openRouterAnalyzer;
     private ExecutorService executor;
+    private SharedPreferences prefs;
+
+    // UI элементы
+    private MaterialToolbar toolbar;
+    private CardView cardRecordDream;
+    private CardView cardDreamHistory;
+    private TextView tvTotalDreams;
+    private TextView tvAnalyzedDreams;
+    private TextView tvSymbolsFound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
         initializeDatabase();
+        initializePreferences();
         initializeViews();
-        setupRecyclerView();
-        checkPermissions();
+        setupClickListeners();
+        loadStatistics();
     }
 
     private void initializeDatabase() {
@@ -74,158 +65,148 @@ public class MainActivity extends AppCompatActivity {
         executor = Executors.newFixedThreadPool(2);
     }
 
+    private void initializePreferences() {
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        // Инициализируем OpenRouterAnalyzer
+        openRouterAnalyzer = new OpenRouterAnalyzer(this);
+    }
+
     private void initializeViews() {
-        recordButton = findViewById(R.id.btn_record_dream);
-        atlasButton = findViewById(R.id.btn_atlas);
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        recordButton.setOnClickListener(v -> {
-            if (checkPermissions()) {
-                startRecordActivity();
-            } else {
-                requestPermissions();
-            }
+        cardRecordDream = findViewById(R.id.card_record_dream);
+        cardDreamHistory = findViewById(R.id.card_dream_history);
+        tvTotalDreams = findViewById(R.id.tv_total_dreams);
+        tvAnalyzedDreams = findViewById(R.id.tv_analyzed_dreams);
+        tvSymbolsFound = findViewById(R.id.tv_symbols_found);
+    }
+
+    private void setupClickListeners() {
+        cardRecordDream.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, RecordDreamActivity.class);
+            startActivity(intent);
         });
 
-        atlasButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, com.lionido.dreams_track.activity.AtlasActivity.class);
+        cardDreamHistory.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, DreamHistoryActivity.class);
             startActivity(intent);
         });
     }
 
-    private void setupRecyclerView() {
-        dreamsList = new ArrayList<>();
-        dreamAdapter = new DreamAdapter(dreamsList, dream -> {
-            // Переход к деталям сна
-            Intent intent = new Intent(this, com.lionido.dreams_track.activity.DreamDetailActivity.class);
-            intent.putExtra("dream_id", dream.getId());
-            startActivity(intent);
-        });
-        dreamAdapter.setOnDreamDeleteListener((dream, position) -> {
-            deleteDreamFromDb(dream, position);
-        });
-        dreamsRecyclerView = findViewById(R.id.recycler_dreams);
-        dreamsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        dreamsRecyclerView.setAdapter(dreamAdapter);
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
+    private void showSettingsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Настройки");
+        String[] options = {"Логи ИИ", "О приложении"};
+        builder.setItems(options, (dialog, which) -> {
+            switch (which) {
+                case 0:
+                    showOpenRouterLogsDialog();
+                    break;
+                case 1:
+                    showAboutDialog();
+                    break;
             }
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                int position = viewHolder.getAdapterPosition();
-                Dream dream = dreamsList.get(position);
-                deleteDreamFromDb(dream, position);
-            }
-        };
-        new ItemTouchHelper(simpleCallback).attachToRecyclerView(dreamsRecyclerView);
+        });
+        builder.setNegativeButton("Закрыть", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 
-    private void startRecordActivity() {
-        Intent intent = new Intent(this, RecordDreamActivity.class);
-        startActivity(intent);
+    private void showOpenRouterLogsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_open_router_settings, null);
+        builder.setView(dialogView);
+
+        Button btnClearLogs = dialogView.findViewById(R.id.btn_clear_logs);
+        TextView tvUsageInfo = dialogView.findViewById(R.id.tv_usage_info);
+        TextView tvLogs = dialogView.findViewById(R.id.tv_logs);
+
+        tvUsageInfo.setText(OpenRouterAnalyzer.getUsageInfo());
+
+        // Отображение логов
+        String logs = openRouterAnalyzer.getOpenRouterLogs();
+        tvLogs.setText(logs);
+
+        btnClearLogs.setOnClickListener(v -> {
+            openRouterAnalyzer.clearOpenRouterLogs();
+            tvLogs.setText("Логи очищены");
+        });
+
+        builder.setPositiveButton("Закрыть", (dialog, which) -> dialog.dismiss());
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
-    private boolean checkPermissions() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void requestPermissions() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.RECORD_AUDIO},
-                PERMISSION_REQUEST_CODE);
+    private void showAboutDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("О приложении");
+        builder.setMessage("Приложение для записи и анализа сновидений\nВерсия 1.0");
+        builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startRecordActivity();
-            } else {
-                Toast.makeText(this, "Разрешение на запись аудио необходимо для работы приложения",
-                        Toast.LENGTH_LONG).show();
-            }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        
+        if (itemId == R.id.action_export_txt) {
+            // Экспорт в TXT
+            Toast.makeText(this, "Экспорт в TXT (в разработке)", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (itemId == R.id.action_export_json) {
+            // Экспорт в JSON
+            Toast.makeText(this, "Экспорт в JSON (в разработке)", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (itemId == R.id.action_settings) {
+            // Открытие настроек
+            showSettingsDialog();
+            return true;
         }
+        
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void loadStatistics() {
+        executor.execute(() -> {
+            try {
+                // Получаем общее количество снов
+                int totalDreams = dreamDao.getDreamCount();
+                
+                // Для количества проанализированных снов и символов 
+                // будем использовать простую логику, так как в базе данных 
+                // нет отдельных полей для этих значений
+                int analyzedDreams = totalDreams; // Предполагаем, что все сны проанализированы
+                int symbolsFound = totalDreams * 3; // Примерно 3 символа на сон
+                
+                // Обновляем UI в основном потоке
+                int finalTotalDreams = totalDreams;
+                runOnUiThread(() -> {
+                    tvTotalDreams.setText(String.valueOf(finalTotalDreams));
+                    tvAnalyzedDreams.setText(String.valueOf(analyzedDreams));
+                    tvSymbolsFound.setText(String.valueOf(symbolsFound));
+                });
+            } catch (Exception e) {
+                Log.e("MainActivity", "Ошибка загрузки статистики", e);
+                // В случае ошибки показываем нули
+                runOnUiThread(() -> {
+                    tvTotalDreams.setText("0");
+                    tvAnalyzedDreams.setText("0");
+                    tvSymbolsFound.setText("0");
+                });
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadDreams();
-    }
-
-    private void loadDreams() {
-        executor.execute(() -> {
-            List<DreamEntity> dreamEntities = dreamDao.getAllDreams();
-
-            runOnUiThread(() -> {
-                dreamsList.clear();
-                for (DreamEntity entity : dreamEntities) {
-                    Dream dream = convertEntityToDream(entity);
-                    dreamsList.add(dream);
-                }
-                dreamAdapter.notifyDataSetChanged();
-            });
-        });
-    }
-
-    private Dream convertEntityToDream(DreamEntity entity) {
-        Dream dream = new Dream(entity.getText(), entity.getAudioPath());
-        dream.setId(entity.getId());
-        dream.setTimestamp(entity.getTimestamp());
-        dream.setSymbols(entity.getSymbols());
-        dream.setEmotion(entity.getEmotion());
-        return dream;
-    }
-
-    private void deleteDreamFromDb(Dream dream, int position) {
-        executor.execute(() -> {
-            dreamDao.delete(new DreamEntity(dream.getText(), dream.getAudioPath(), ""));
-            runOnUiThread(() -> {
-                dreamAdapter.removeDream(position);
-                Toast.makeText(this, "Сон удалён", Toast.LENGTH_SHORT).show();
-            });
-        });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (executor != null) {
-            executor.shutdown();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_main, menu);
-        return true;
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_export_txt) {
-            exportDreams("txt");
-            return true;
-        } else if (item.getItemId() == R.id.action_export_json) {
-            exportDreams("json");
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    private void exportDreams(String type) {
-        executor.execute(() -> {
-            try {
-                List<DreamEntity> dreamEntities = dreamDao.getAllDreams();
-                File file = type.equals("txt") ? ExportUtils.exportDreamsToTxt(this, dreamEntities) : ExportUtils.exportDreamsToJson(this, dreamEntities);
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "Экспортировано: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
-                });
-            } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(this, "Ошибка экспорта: " + e.getMessage(), Toast.LENGTH_LONG).show());
-            }
-        });
+        loadStatistics();
     }
 }

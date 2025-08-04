@@ -4,6 +4,7 @@
 
     <!-- Разрешения -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -27,8 +28,28 @@
         
         <activity
             android:name=".activity.RecordDreamActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="Запись сна" />
+            
+        <activity
+            android:name=".activity.DreamDetailActivity"
+            android:exported="false"
+            android:label="Детали сна" />
+            
+        <activity
+            android:name=".activity.EditDreamActivity"
+            android:exported="false"
+            android:label="Редактирование сна" />
+            
+        <activity
+            android:name=".activity.AtlasActivity"
+            android:exported="false"
+            android:label="Атлас снов" />
+            
+        <activity
+            android:name=".activity.DreamHistoryActivity"
+            android:exported="false"
+            android:label="История снов" />
             
     </application>
 

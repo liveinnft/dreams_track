@@ -1,3 +1,57 @@
 <resources>
-    <string name="app_name">dreams_track</string>
+    <string name="app_name">Dreams Track</string>
+    
+    <!-- Основные строки -->
+    <string name="welcome_title">Добро пожаловать!</string>
+    <string name="welcome_message">Запишите свой сон и получите его анализ</string>
+    <string name="record_dream">Записать сон</string>
+    <string name="dream_history">История снов</string>
+    <string name="your_statistics">Ваша статистика</string>
+    
+    <!-- Статистика -->
+    <string name="total_dreams">Снов</string>
+    <string name="analyzed_dreams">Проанализировано</string>
+    <string name="symbols_found">Символов</string>
+    
+    <!-- Экран записи сна -->
+    <string name="input_mode">Режим ввода</string>
+    <string name="voice_input">Голосовой ввод</string>
+    <string name="text_input">Текстовый ввод</string>
+    <string name="dream_content">Содержание сна</string>
+    <string name="record_button_start">Начать запись</string>
+    <string name="record_button_stop">Остановить запись</string>
+    <string name="status_ready">Нажмите кнопку для начала записи</string>
+    <string name="status_recording">Идет запись…</string>
+    <string name="status_processing">Обработка…</string>
+    <string name="describe_your_dream">Опишите свой сон</string>
+    <string name="results">Результаты</string>
+    <string name="transcript_placeholder">Текст сна и результаты анализа появятся здесь…</string>
+    <string name="analyze">Анализировать</string>
+    <string name="save">Сохранить</string>
+    
+    <!-- Экран истории -->
+    <string name="no_dreams_yet">У вас пока нет записанных снов</string>
+    <string name="add_first_dream">Записать первый сон</string>
+    
+    <!-- Экран деталей -->
+    <string name="dream_details">Детали сна</string>
+    <string name="analysis">Анализ</string>
+    <string name="emotion_label">Эмоция:</string>
+    <string name="interpretation_label">Интерпретация:</string>
+    <string name="symbols_found_label">Найденные символы:</string>
+    <string name="edit">Редактировать</string>
+    <string name="delete">Удалить</string>
+    
+    <!-- Эмоции -->
+    <string name="emotion_anxious">Тревожный</string>
+    <string name="emotion_happy">Радостный</string>
+    <string name="emotion_strange">Странный</string>
+    <string name="emotion_neutral">Нейтральный</string>
+    
+    <!-- Сообщения -->
+    <string name="dream_saved">Сон сохранен</string>
+    <string name="dream_deleted">Сон удален</string>
+    <string name="confirm_delete">Вы уверены, что хотите удалить этот сон?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
 </resources>
