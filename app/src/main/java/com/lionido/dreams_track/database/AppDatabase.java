@@ -5,6 +5,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 import android.content.Context;
 
 @Database(entities = {DreamEntity.class}, version = 2, exportSchema = true)
@@ -33,8 +34,22 @@ public abstract class AppDatabase extends RoomDatabase {
     static final androidx.room.migration.Migration MIGRATION_1_2 = new androidx.room.migration.Migration(1, 2) {
         @Override
         public void migrate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase database) {
-            // В данном случае мы не изменяем структуру таблицы, 
-            // просто увеличиваем версию для соответствия схеме
+            // Добавляем недостающие столбцы в таблицу dreams только если они еще не существуют
+            addColumnIfNotExists(database, "emotion", "TEXT");
+            addColumnIfNotExists(database, "inputMethod", "TEXT");
+            addColumnIfNotExists(database, "interpretation", "TEXT");
+            addColumnIfNotExists(database, "analysis", "TEXT");
+        }
+        
+        private void addColumnIfNotExists(@NonNull androidx.sqlite.db.SupportSQLiteDatabase database, 
+                                          String columnName, 
+                                          String columnType) {
+            try {
+                // Попробуем добавить столбец - если он уже существует, будет исключение
+                database.execSQL("ALTER TABLE dreams ADD COLUMN " + columnName + " " + columnType);
+            } catch (Exception e) {
+                // Если столбец уже существует, просто игнорируем ошибку
+            }
         }
     };
 }
