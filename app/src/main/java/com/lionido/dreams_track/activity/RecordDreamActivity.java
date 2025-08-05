@@ -363,7 +363,7 @@ public class RecordDreamActivity extends BaseActivity {
         chipGroupSymbols.removeAllViews();
         for (Symbol symbol : symbols) {
             Chip chip = new Chip(this);
-            chip.setText(symbol.getName());
+            chip.setText(symbol.getKeyword());
             chip.setChipBackgroundColorResource(android.R.color.holo_blue_light);
             chip.setTextColor(getResources().getColor(android.R.color.white));
             chipGroupSymbols.addView(chip);
