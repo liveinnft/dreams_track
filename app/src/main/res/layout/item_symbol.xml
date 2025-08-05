@@ -1,30 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@color/surface"
-    android:layout_marginBottom="8dp"
-    android:layout_marginTop="8dp">
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
 
-    <TextView
-        android:id="@+id/tv_symbol_keyword"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ключевое слово"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:layout_marginBottom="4dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tv_symbol_interpretation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Интерпретация символа"
-        android:textSize="14sp"
-        android:textColor="@color/text_secondary"
-        android:lineSpacingExtra="2dp" />
+        <TextView
+            android:id="@+id/textKeyword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ключевое слово"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#212121" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/textSymbol"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Символ"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/textInterpretation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Интерпретация символа"
+            android:textSize="14sp"
+            android:textColor="#212121"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/textEmotion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Эмоция"
+            android:textSize="12sp"
+            android:textColor="#757575"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/emotion_badge_background"
+            android:padding="4dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

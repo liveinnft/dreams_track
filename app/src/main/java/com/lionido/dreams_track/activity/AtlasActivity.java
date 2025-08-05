@@ -7,8 +7,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import com.lionido.dreams_track.BaseActivity;
 import com.lionido.dreams_track.R;
 import com.lionido.dreams_track.database.AppDatabase;
 import com.lionido.dreams_track.database.DreamDao;
@@ -24,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AtlasActivity extends AppCompatActivity {
+public class AtlasActivity extends BaseActivity {
     private WordCloudView wordCloudView;
     private Spinner emotionFilterSpinner;
     private AppDatabase database;

@@ -4,19 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/background_dark"
     tools:context=".activity.RecordDreamActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary">
+        android:background="@color/primary_dark">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
+            android:background="@color/primary_dark"
             app:title="Запись сна"
             app:titleTextColor="@color/white" />
 
@@ -33,34 +33,34 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Выбор режима ввода -->
+            <!-- Выбор способа ввода -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Режим ввода"
-                        android:textColor="@color/text_primary"
-                        android:textSize="20sp"
+                        android:layout_marginBottom="16dp"
+                        android:text="Выберите способ ввода"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_input_mode"
+                        android:id="@+id/chip_group_input_method"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
                         app:singleSelection="true">
 
                         <com.google.android.material.chip.Chip
@@ -69,18 +69,18 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checked="true"
-                            android:text="Голосовой ввод"
-                            android:textColor="@color/text_primary"
-                            app:chipBackgroundColor="@color/button_secondary_bg" />
+                            android:text="🎤 Голос"
+                            android:textColor="@color/text_primary_dark"
+                            app:chipBackgroundColor="@color/button_secondary_bg_dark" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_text"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Текстовый ввод"
-                            android:textColor="@color/text_primary"
-                            app:chipBackgroundColor="@color/button_secondary_bg" />
+                            android:text="⌨️ Текст"
+                            android:textColor="@color/text_primary_dark"
+                            app:chipBackgroundColor="@color/button_secondary_bg_dark" />
 
                     </com.google.android.material.chip.ChipGroup>
 
@@ -88,125 +88,266 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Область ввода -->
+            <!-- Секция голосового ввода -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_voice_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Содержание сна"
-                        android:textColor="@color/text_primary"
-                        android:textSize="20sp"
+                        android:layout_marginBottom="16dp"
+                        android:text="🎤 Голосовой ввод"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <!-- Голосовой ввод -->
-                    <LinearLayout
-                        android:id="@+id/layout_voice_input"
+                    <TextView
+                        android:id="@+id/tv_voice_status"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:orientation="vertical">
+                        android:layout_marginBottom="24dp"
+                        android:gravity="center"
+                        android:text="Нажмите кнопку для начала записи"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="16sp" />
 
-                        <TextView
-                            android:id="@+id/tv_status"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:text="Нажмите кнопку для начала записи"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="16sp" />
-
-                        <com.google.android.material.floatingactionbutton.FloatingActionButton
-                            android:id="@+id/btn_record"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_marginTop="24dp"
-                            android:layout_marginBottom="24dp"
-                            android:contentDescription="Запись"
-                            android:src="@drawable/ic_mic"
-                            app:backgroundTint="@color/accent"
-                            app:tint="@color/white" />
-
-                    </LinearLayout>
-
-                    <!-- Текстовый ввод -->
-                    <LinearLayout
-                        android:id="@+id/layout_text_input"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:orientation="vertical"
-                        android:visibility="gone">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Опишите свой сон"
-                            app:boxBackgroundColor="@color/background"
-                            app:boxStrokeColor="@color/accent"
-                            app:hintTextColor="@color/text_secondary">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/edit_dream_text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="top"
-                                android:lines="6"
-                                android:textColor="@color/text_primary" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                    </LinearLayout>
+                    <ImageButton
+                        android:id="@+id/btn_voice_record"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/button_primary"
+                        android:contentDescription="Запись голоса"
+                        android:src="@drawable/ic_mic"
+                        app:tint="@color/white" />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Результаты -->
+            <!-- Секция текстового ввода -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_text_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Результаты"
-                        android:textColor="@color/text_primary"
-                        android:textSize="20sp"
+                        android:layout_marginBottom="16dp"
+                        android:text="⌨️ Текстовый ввод"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:textColorHint="@color/text_hint_dark"
+                        app:boxBackgroundColor="@color/background_dark"
+                        app:boxStrokeColor="@color/accent_dark"
+                        app:hintTextColor="@color/text_secondary_dark">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_dream_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="top"
+                            android:hint="Введите текст вашего сна здесь..."
+                            android:inputType="textMultiLine|textCapSentences"
+                            android:lineSpacingExtra="4dp"
+                            android:minLines="8"
+                            android:textColor="@color/text_primary_dark"
+                            android:textColorHint="@color/text_hint_dark"
+                            android:textSize="16sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Карточка с транскрипцией -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_transcript"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:text="📝 Распознанный текст"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_transcript"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
                         android:background="@drawable/background_text"
-                        android:padding="16dp"
-                        android:text="Текст сна и результаты анализа появятся здесь..."
-                        android:textColor="@color/text_primary"
+                        android:lineSpacingExtra="4dp"
+                        android:padding="12dp"
+                        android:text="Распознанный текст будет отображен здесь..."
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="16sp" />
+
+                    <Button
+                        android:id="@+id/btn_edit_transcript"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/button_secondary"
+                        android:padding="12dp"
+                        android:text="✏️ Редактировать"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Индикатор прогресса анализа -->
+            <LinearLayout
+                android:id="@+id/layout_analysis_progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="8dp"
+                    android:indeterminateTint="@color/accent_dark" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Анализ сна..."
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+            <!-- Карточка с результатами анализа -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_analysis"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="🔍 Результаты анализа"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <!-- Эмоция -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Эмоция:"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_emotion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:text="Не определена"
+                        android:textColor="@color/text_primary_dark"
+                        android:textSize="16sp" />
+
+                    <!-- Символы -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:text="Найденные символы:"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_symbols"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Интерпретация -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Интерпретация:"
+                        android:textColor="@color/text_secondary_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_interpretation"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/background_text"
+                        android:lineSpacingExtra="4dp"
+                        android:padding="12dp"
+                        android:text="Интерпретация будет отображена здесь..."
+                        android:textColor="@color/text_primary_dark"
                         android:textSize="16sp" />
 
                 </LinearLayout>
@@ -217,51 +358,37 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:orientation="horizontal"
-                android:weightSum="2">
+                android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_analyze"
-                    style="@style/Widget.MaterialComponents.Button"
+                <Button
+                    android:id="@+id/btn_cancel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/accent"
-                    android:enabled="false"
-                    android:padding="16dp"
-                    android:text="Анализировать"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    app:cornerRadius="8dp" />
+                    android:background="@drawable/button_secondary"
+                    android:padding="12dp"
+                    android:text="❌ Отмена"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="16sp" />
 
-                <com.google.android.material.button.MaterialButton
+                <Button
                     android:id="@+id/btn_save"
-                    style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/primary"
-                    android:enabled="false"
-                    android:padding="16dp"
-                    android:text="Сохранить"
+                    android:background="@drawable/button_primary"
+                    android:padding="12dp"
+                    android:text="💾 Сохранить"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    app:cornerRadius="8dp" />
+                    android:visibility="gone" />
 
             </LinearLayout>
 
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
-
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

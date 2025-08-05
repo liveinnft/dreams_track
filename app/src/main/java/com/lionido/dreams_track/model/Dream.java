@@ -1,5 +1,6 @@
 package com.lionido.dreams_track.model;
 
+import java.util.Date;
 import java.util.List;
 
 public class Dream {
@@ -9,6 +10,8 @@ public class Dream {
     private long timestamp;
     private List<Symbol> symbols;
     private String emotion;
+    private String interpretation;
+    private Date date;
 
     public Dream() {
         this.timestamp = System.currentTimeMillis();
@@ -67,5 +70,21 @@ public class Dream {
 
     public void setEmotion(String emotion) {
         this.emotion = emotion;
+    }
+    
+    public Date getDate() {
+        return date;
+    }
+    
+    public void setDate(Date date) {
+        this.date = date;
+    }
+    
+    public String getInterpretation() {
+        return interpretation;
+    }
+    
+    public void setInterpretation(String interpretation) {
+        this.interpretation = interpretation;
     }
 }

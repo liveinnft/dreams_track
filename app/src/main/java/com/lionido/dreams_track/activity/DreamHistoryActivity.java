@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import androidx.appcompat.app.AppCompatActivity;
+import com.lionido.dreams_track.BaseActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DreamHistoryActivity extends AppCompatActivity {
+public class DreamHistoryActivity extends BaseActivity {
     private RecyclerView recyclerView;
     private DreamAdapter dreamAdapter;
     private List<Dream> dreamList;
@@ -59,10 +59,10 @@ public class DreamHistoryActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         recyclerView = findViewById(R.id.recycler_dreams);
-        emptyView = findViewById(R.id.layout_empty);
+        emptyView = findViewById(R.id.empty_view);
         btnAddFirstDream = findViewById(R.id.btn_add_first_dream);
 
-        FloatingActionButton fab = findViewById(R.id.fab_add);
+        FloatingActionButton fab = findViewById(R.id.fab_add_dream);
         if (fab != null) {
             fab.setOnClickListener(v -> {
                 Intent intent = new Intent(DreamHistoryActivity.this, RecordDreamActivity.class);

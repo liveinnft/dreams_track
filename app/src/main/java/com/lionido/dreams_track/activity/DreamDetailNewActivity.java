@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.lionido.dreams_track.R;
-import com.lionido.dreams_track.adapter.SymbolAdapter;
+import com.lionido.dreams_track.adapter.SymbolsAdapter;
 import com.lionido.dreams_track.database.AppDatabase;
 import com.lionido.dreams_track.database.DreamDao;
 import com.lionido.dreams_track.database.DreamEntity;
@@ -48,7 +48,7 @@ public class DreamDetailNewActivity extends AppCompatActivity {
     private OpenRouterAnalyzer openRouterAnalyzer;
 
     private DreamEntity currentDream;
-    private SymbolAdapter symbolAdapter;
+    private SymbolsAdapter symbolAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +74,7 @@ public class DreamDetailNewActivity extends AppCompatActivity {
         tvEmotion = findViewById(R.id.tv_emotion);
         tvInputMethod = findViewById(R.id.tv_input_method);
         tvInterpretation = findViewById(R.id.tv_interpretation);
-        tvAnalysis = findViewById(R.id.tv_analysis);
+        tvAnalysis = findViewById(R.id.tv_analysis_results);
         recyclerSymbols = findViewById(R.id.recycler_symbols);
         btnEdit = findViewById(R.id.btn_edit);
         btnDelete = findViewById(R.id.btn_delete);
@@ -128,7 +128,7 @@ public class DreamDetailNewActivity extends AppCompatActivity {
             tvEmotion.setTextColor(getEmotionColor(emotion));
         } else {
             tvEmotion.setText("Не определена");
-            tvEmotion.setTextColor(getColor(R.color.text_secondary));
+            tvEmotion.setTextColor(getColor(R.color.text_secondary_dark));
         }
 
         // Отображение способа ввода
@@ -152,7 +152,7 @@ public class DreamDetailNewActivity extends AppCompatActivity {
         // Отображение символов
         List<Symbol> symbols = currentDream.getSymbols();
         if (symbols != null && !symbols.isEmpty()) {
-            symbolAdapter = new SymbolAdapter(symbols);
+            symbolAdapter = new SymbolsAdapter(this, symbols);
             recyclerSymbols.setAdapter(symbolAdapter);
             recyclerSymbols.setVisibility(View.VISIBLE);
         } else {
@@ -162,25 +162,25 @@ public class DreamDetailNewActivity extends AppCompatActivity {
 
     private int getEmotionColor(String emotion) {
         if ("fear".equals(emotion)) {
-            return getColor(R.color.emotion_fear);
+            return getColor(R.color.emotion_fear_dark);
         } else if ("joy".equals(emotion)) {
-            return getColor(R.color.emotion_joy);
+            return getColor(R.color.emotion_joy_dark);
         } else if ("sadness".equals(emotion)) {
-            return getColor(R.color.emotion_sadness);
+            return getColor(R.color.emotion_sadness_dark);
         } else if ("anger".equals(emotion)) {
-            return getColor(R.color.emotion_anger);
+            return getColor(R.color.emotion_anger_dark);
         } else if ("surprise".equals(emotion)) {
-            return getColor(R.color.emotion_surprise);
+            return getColor(R.color.emotion_surprise_dark);
         } else if ("calm".equals(emotion)) {
-            return getColor(R.color.emotion_calm);
+            return getColor(R.color.emotion_calm_dark);
         } else if ("love".equals(emotion)) {
-            return getColor(R.color.emotion_love);
+            return getColor(R.color.emotion_love_dark);
         } else if ("shame".equals(emotion)) {
-            return getColor(R.color.emotion_shame);
+            return getColor(R.color.emotion_shame_dark);
         } else if ("despair".equals(emotion)) {
-            return getColor(R.color.emotion_despair);
+            return getColor(R.color.emotion_despair_dark);
         } else {
-            return getColor(R.color.text_secondary);
+            return getColor(R.color.text_secondary_dark);
         }
     }
 

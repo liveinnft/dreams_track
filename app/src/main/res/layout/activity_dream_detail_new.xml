@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/background_dark"
     android:padding="16dp">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_marginBottom="24dp"
             android:gravity="center"
             android:text="🌙 Детали сна"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/text_primary_dark"
             android:textSize="24sp"
             android:textStyle="bold" />
 
@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/surface"
+            app:cardBackgroundColor="@color/surface_dark"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp">
 
@@ -50,7 +50,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="01 января 2024, 12:00"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/text_secondary_dark"
                         android:textSize="14sp" />
 
                     <TextView
@@ -58,7 +58,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🎤 Голосовой ввод"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/text_secondary_dark"
                         android:textSize="14sp" />
 
                 </LinearLayout>
@@ -74,7 +74,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Эмоция: "
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/text_secondary_dark"
                         android:textSize="16sp" />
 
                     <TextView
@@ -93,7 +93,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="Текст сна:"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/text_secondary_dark"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -105,46 +105,7 @@
                     android:lineSpacingExtra="4dp"
                     android:padding="12dp"
                     android:text="Текст сна будет отображен здесь..."
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Карточка с интерпретацией -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="🔮 Интерпретация сна"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tv_interpretation"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/background_text"
-                    android:lineSpacingExtra="4dp"
-                    android:padding="12dp"
-                    android:text="Интерпретация сна будет отображена здесь..."
-                    android:textColor="@color/text_primary"
+                    android:textColor="@color/text_primary_dark"
                     android:textSize="16sp" />
 
             </LinearLayout>
@@ -156,7 +117,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/surface"
+            app:cardBackgroundColor="@color/surface_dark"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp">
 
@@ -171,7 +132,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:text="🔍 Найденные символы"
-                    android:textColor="@color/text_primary"
+                    android:textColor="@color/text_primary_dark"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -180,45 +141,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <!-- Карточка с анализом -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="📊 Анализ сна"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tv_analysis"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/background_text"
-                    android:lineSpacingExtra="4dp"
-                    android:padding="12dp"
-                    android:text="Анализ сна будет отображен здесь..."
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
 
             </LinearLayout>
 
@@ -240,7 +162,7 @@
                 android:background="@drawable/button_secondary"
                 android:padding="12dp"
                 android:text="⬅️ Назад"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/text_primary_dark"
                 android:textSize="16sp" />
 
             <Button
@@ -253,7 +175,7 @@
                 android:background="@drawable/button_secondary"
                 android:padding="12dp"
                 android:text="✏️ Изменить"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/text_primary_dark"
                 android:textSize="16sp" />
 
             <Button

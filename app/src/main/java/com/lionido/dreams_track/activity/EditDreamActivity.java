@@ -8,8 +8,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import com.lionido.dreams_track.BaseActivity;
 import com.lionido.dreams_track.R;
 import com.lionido.dreams_track.database.AppDatabase;
 import com.lionido.dreams_track.database.DreamDao;
@@ -23,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class EditDreamActivity extends AppCompatActivity {
+public class EditDreamActivity extends BaseActivity {
 
     private EditText editDreamText;
     private TextView tvAnalysisResults;

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/background_dark"
     android:padding="16dp">
 
     <LinearLayout
@@ -18,16 +18,16 @@
             android:layout_marginBottom="24dp"
             android:gravity="center"
             android:text="✏️ Редактировать сон"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/text_primary_dark"
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <!-- Карточка с формой редактирования -->
-        <androidx.cardview.widget.CardView
+        <!-- Поле ввода текста сна -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/surface"
+            app:cardBackgroundColor="@color/surface_dark"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp">
 
@@ -37,74 +37,88 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Поле для ввода текста сна -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="Текст сна:"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/text_secondary_dark"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <EditText
-                    android:id="@+id/et_dream_text"
+                    android:id="@+id/edit_dream_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/background_text"
                     android:gravity="top"
-                    android:hint="Введите текст сна..."
-                    android:inputType="textMultiLine"
+                    android:hint="Введите текст вашего сна здесь..."
+                    android:inputType="textMultiLine|textCapSentences"
                     android:lineSpacingExtra="4dp"
-                    android:minLines="5"
+                    android:minLines="6"
                     android:padding="12dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary_dark"
+                    android:textColorHint="@color/text_hint_dark"
                     android:textSize="16sp" />
 
-                <!-- Анализ текста -->
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Результаты анализа -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/surface_dark"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="🔍 Результаты анализа"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
                 <TextView
                     android:id="@+id/tv_analysis_results"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
                     android:background="@drawable/background_text"
                     android:lineSpacingExtra="4dp"
                     android:padding="12dp"
-                    android:text="Результаты анализа появятся здесь..."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    android:visibility="gone" />
+                    android:text="Здесь будут отображаться результаты анализа сна..."
+                    android:textColor="@color/text_secondary_dark"
+                    android:textSize="14sp" />
 
-                <LinearLayout
+                <Button
+                    android:id="@+id/btn_reanalyze"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_reanalyze"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/button_secondary"
-                        android:padding="12dp"
-                        android:text="🔄 Переанализировать"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
-
-                </LinearLayout>
+                    android:background="@drawable/button_secondary"
+                    android:padding="12dp"
+                    android:text="🔄 Перевыполнить анализ"
+                    android:textColor="@color/text_primary_dark"
+                    android:textSize="16sp" />
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Кнопки действий -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:orientation="horizontal">
 
             <Button
@@ -116,7 +130,7 @@
                 android:background="@drawable/button_secondary"
                 android:padding="12dp"
                 android:text="❌ Отмена"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/text_primary_dark"
                 android:textSize="16sp" />
 
             <Button

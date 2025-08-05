@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="Информация об OpenRouter API"
-        android:textColor="@color/text_secondary"
+        android:textColor="@color/text_secondary_dark"
         android:textSize="14sp" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="Здесь будет информация об использовании API"
-        android:textColor="@color/text_secondary"
+        android:textColor="@color/text_secondary_dark"
         android:textSize="12sp" />
 
     <Button
@@ -35,22 +35,25 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="Логи взаимодействия:"
-        android:textColor="@color/text_primary"
-        android:textSize="14sp"
+        android:text="Логи запросов:"
+        android:textColor="@color/text_primary_dark"
+        android:textSize="16sp"
         android:textStyle="bold" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="200dp">
+        android:layout_height="200dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/background_text"
+        android:padding="8dp">
 
         <TextView
             android:id="@+id/tv_logs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Здесь будут отображаться логи"
-            android:textColor="@color/text_secondary"
-            android:textSize="10sp" />
+            android:text="Логи будут отображены здесь..."
+            android:textColor="@color/text_secondary_dark"
+            android:textSize="12sp" />
 
     </ScrollView>
 

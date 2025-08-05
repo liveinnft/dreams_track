@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="Информация о Gemini API"
-        android:textColor="@color/text_secondary"
+        android:textColor="@color/text_secondary_dark"
         android:textSize="14sp" />
 
     <com.google.android.material.textfield.TextInputLayout

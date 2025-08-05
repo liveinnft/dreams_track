@@ -51,6 +51,11 @@
             android:exported="false"
             android:label="История снов" />
             
+        <activity
+            android:name=".activity.SettingsActivity"
+            android:exported="false"
+            android:label="Настройки" />
+            
     </application>
 
 </manifest>

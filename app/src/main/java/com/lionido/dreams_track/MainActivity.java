@@ -13,13 +13,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.lionido.dreams_track.activity.AtlasActivity;
 import com.lionido.dreams_track.activity.DreamHistoryActivity;
 import com.lionido.dreams_track.activity.RecordDreamActivity;
+import com.lionido.dreams_track.activity.SettingsActivity;
 import com.lionido.dreams_track.database.AppDatabase;
 import com.lionido.dreams_track.database.DreamDao;
 import com.lionido.dreams_track.database.DreamEntity;
@@ -29,9 +29,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     private static final String PREFS_NAME = "DreamPrefs";
     private static final String PREF_GEMINI_API_KEY = "gemini_api_key";
+    private static final String PREF_THEME = "app_theme";
 
     private AppDatabase database;
     private DreamDao dreamDao;
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
     private void showSettingsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Настройки");
-        String[] options = {"Логи ИИ", "О приложении"};
+        String[] options = {"Логи ИИ", "О приложении", "Тема приложения"};
         builder.setItems(options, (dialog, which) -> {
             switch (which) {
                 case 0:
@@ -105,6 +106,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 1:
                     showAboutDialog();
+                    break;
+                case 2:
+                    // Открытие настроек темы
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
                     break;
             }
         });
