@@ -19,8 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
@@ -31,7 +30,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import com.lionido.dreams_track.BaseActivity;
 import com.lionido.dreams_track.R;
-import com.lionido.dreams_track.adapter.SymbolsAdapter;
+
 import com.lionido.dreams_track.database.AppDatabase;
 import com.lionido.dreams_track.database.DreamDao;
 import com.lionido.dreams_track.model.Dream;
@@ -74,9 +73,8 @@ public class RecordDreamActivity extends BaseActivity {
     private TextView tvTranscript, tvEmotionIcon, tvEmotionName, tvEmotionDescription,
             tvInterpretation, tvPersonalGrowth, tvActionableAdvice;
 
-    // RecyclerView для символов
-    private RecyclerView recyclerSymbols;
-    private SymbolsAdapter symbolsAdapter;
+    // ChipGroup для символов
+    private ChipGroup chipGroupSymbols;
 
     // Утилиты
     private SpeechHelper speechHelper;
@@ -101,7 +99,7 @@ public class RecordDreamActivity extends BaseActivity {
         initializeViews();
         initializeUtils();
         setupListeners();
-        setupRecyclerView();
+        setupChipGroup();
         checkPermissions();
     }
 
@@ -140,8 +138,8 @@ public class RecordDreamActivity extends BaseActivity {
         tvPersonalGrowth = findViewById(R.id.tv_interpretation);
         tvActionableAdvice = findViewById(R.id.tv_interpretation);
 
-        // RecyclerView для символов
-        recyclerSymbols = findViewById(R.id.chip_group_symbols);
+        // ChipGroup для символов
+        chipGroupSymbols = findViewById(R.id.chip_group_symbols);
     }
 
     private void initializeUtils() {
@@ -149,10 +147,9 @@ public class RecordDreamActivity extends BaseActivity {
         openRouterAnalyzer = new OpenRouterAnalyzer(this);
     }
 
-    private void setupRecyclerView() {
-        symbolsAdapter = new SymbolsAdapter(this, new ArrayList<>());
-        recyclerSymbols.setLayoutManager(new LinearLayoutManager(this));
-        recyclerSymbols.setAdapter(symbolsAdapter);
+    private void setupChipGroup() {
+        // Инициализация ChipGroup для символов
+        // Символы будут добавляться динамически при анализе
     }
 
     private void setupListeners() {
@@ -332,7 +329,7 @@ public class RecordDreamActivity extends BaseActivity {
 
         // Показываем символы
         if (symbols != null && !symbols.isEmpty()) {
-            symbolsAdapter.updateSymbols(symbols);
+            displaySymbols(symbols);
             showCardWithAnimation(cardSymbols);
         }
 
@@ -360,6 +357,17 @@ public class RecordDreamActivity extends BaseActivity {
 
         // Активируем кнопку сохранения
         btnSave.setEnabled(true);
+    }
+
+    private void displaySymbols(List<Symbol> symbols) {
+        chipGroupSymbols.removeAllViews();
+        for (Symbol symbol : symbols) {
+            Chip chip = new Chip(this);
+            chip.setText(symbol.getName());
+            chip.setChipBackgroundColorResource(android.R.color.holo_blue_light);
+            chip.setTextColor(getResources().getColor(android.R.color.white));
+            chipGroupSymbols.addView(chip);
+        }
     }
 
     private void displayEmotion(String emotion) {
