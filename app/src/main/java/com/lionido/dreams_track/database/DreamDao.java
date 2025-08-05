@@ -6,6 +6,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import com.lionido.dreams_track.model.Symbol;
 import java.util.List;
 
 @Dao
@@ -36,4 +37,7 @@ public interface DreamDao {
 
     @Query("SELECT * FROM dreams WHERE emotion = :emotion ORDER BY timestamp DESC")
     List<DreamEntity> getDreamsByEmotion(String emotion);
+    
+    @Query("SELECT * FROM dreams ORDER BY timestamp DESC LIMIT :limit")
+    List<DreamEntity> getRecentDreams(int limit);
 }

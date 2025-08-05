@@ -5,7 +5,6 @@ import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
 import com.lionido.dreams_track.model.Symbol;
-
 import java.util.List;
 
 @Entity(tableName = "dreams")
@@ -20,6 +19,8 @@ public class DreamEntity {
     private List<Symbol> symbols;
     private String emotion;
     private String inputMethod; // "voice" или "text"
+    private String interpretation; // Интерпретация сна
+    private String analysis; // Анализ сна
 
     public DreamEntity() {
         this.timestamp = System.currentTimeMillis();
@@ -53,4 +54,10 @@ public class DreamEntity {
 
     public String getInputMethod() { return inputMethod; }
     public void setInputMethod(String inputMethod) { this.inputMethod = inputMethod; }
+
+    public String getInterpretation() { return interpretation; }
+    public void setInterpretation(String interpretation) { this.interpretation = interpretation; }
+
+    public String getAnalysis() { return analysis; }
+    public void setAnalysis(String analysis) { this.analysis = analysis; }
 }

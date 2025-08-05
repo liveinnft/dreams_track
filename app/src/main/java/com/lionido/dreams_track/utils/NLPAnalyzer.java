@@ -378,4 +378,9 @@ public class NLPAnalyzer {
 
         return frequency;
     }
+    
+    // Добавляем метод extractSymbols как псевдоним для findSymbolsAdvanced
+    public List<Symbol> extractSymbols(String text) {
+        return findSymbolsAdvanced(text);
+    }
 }

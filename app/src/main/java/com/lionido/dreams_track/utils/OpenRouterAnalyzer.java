@@ -31,7 +31,7 @@ public class OpenRouterAnalyzer {
     private static final String TAG = "OpenRouterAnalyzer";
     private static final String API_BASE_URL = "https://openrouter.ai/api/v1/chat/completions";
     private static final String LOG_FILE_NAME = "openrouter_logs.txt";
-    private static final String DEFAULT_API_KEY = "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";
+    private static final String DEFAULT_API_KEY = "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";
 
     private String apiKey;
     private Context context;

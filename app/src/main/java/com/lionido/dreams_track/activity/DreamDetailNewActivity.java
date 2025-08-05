@@ -19,6 +19,7 @@ import com.lionido.dreams_track.database.DreamDao;
 import com.lionido.dreams_track.database.DreamEntity;
 import com.lionido.dreams_track.model.Symbol;
 import com.lionido.dreams_track.utils.EmotionDetector;
+import com.lionido.dreams_track.utils.OpenRouterAnalyzer;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,12 +28,14 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DreamDetailActivity extends AppCompatActivity {
+public class DreamDetailNewActivity extends AppCompatActivity {
 
     private TextView tvDreamText;
     private TextView tvDreamDate;
     private TextView tvEmotion;
     private TextView tvInputMethod;
+    private TextView tvInterpretation;
+    private TextView tvAnalysis;
     private RecyclerView recyclerSymbols;
     private Button btnEdit;
     private Button btnDelete;
@@ -42,6 +45,7 @@ public class DreamDetailActivity extends AppCompatActivity {
     private DreamDao dreamDao;
     private ExecutorService executor;
     private EmotionDetector emotionDetector;
+    private OpenRouterAnalyzer openRouterAnalyzer;
 
     private DreamEntity currentDream;
     private SymbolAdapter symbolAdapter;
@@ -49,7 +53,7 @@ public class DreamDetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_dream_detail);
+        setContentView(R.layout.activity_dream_detail_new);
 
         initializeDatabase();
         initializeViews();
@@ -61,6 +65,7 @@ public class DreamDetailActivity extends AppCompatActivity {
         dreamDao = database.dreamDao();
         executor = Executors.newFixedThreadPool(2);
         emotionDetector = new EmotionDetector();
+        openRouterAnalyzer = new OpenRouterAnalyzer(this);
     }
 
     private void initializeViews() {
@@ -68,6 +73,8 @@ public class DreamDetailActivity extends AppCompatActivity {
         tvDreamDate = findViewById(R.id.tv_dream_date);
         tvEmotion = findViewById(R.id.tv_emotion);
         tvInputMethod = findViewById(R.id.tv_input_method);
+        tvInterpretation = findViewById(R.id.tv_interpretation);
+        tvAnalysis = findViewById(R.id.tv_analysis);
         recyclerSymbols = findViewById(R.id.recycler_symbols);
         btnEdit = findViewById(R.id.btn_edit);
         btnDelete = findViewById(R.id.btn_delete);
@@ -91,34 +98,22 @@ public class DreamDetailActivity extends AppCompatActivity {
         }
 
         executor.execute(() -> {
-            try {
-                currentDream = dreamDao.getDreamById(dreamId);
+            currentDream = dreamDao.getDreamById(dreamId);
 
-                runOnUiThread(() -> {
-                    if (currentDream != null) {
-                        displayDreamData();
-                    } else {
-                        Toast.makeText(this, "Сон не найден", Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    if (!isDestroyed() && !isFinishing()) {
-                        Toast.makeText(DreamDetailActivity.this, "Ошибка загрузки: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
-                });
-            }
+            runOnUiThread(() -> {
+                if (currentDream != null) {
+                    displayDreamData();
+                } else {
+                    Toast.makeText(this, "Сон не найден", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
         });
     }
 
     private void displayDreamData() {
         // Отображение текста сна
-        String dreamText = currentDream.getText();
-        tvDreamText.setText(dreamText != null ? dreamText : "Текст сна отсутствует");
+        tvDreamText.setText(currentDream.getText());
 
         // Форматирование и отображение даты
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, HH:mm", new Locale("ru"));
@@ -146,6 +141,14 @@ public class DreamDetailActivity extends AppCompatActivity {
             tvInputMethod.setText("Не указан");
         }
 
+        // Отображение интерпретации
+        String interpretation = safeString(currentDream.getInterpretation());
+        tvInterpretation.setText(interpretation.isEmpty() ? "Интерпретация отсутствует" : interpretation);
+
+        // Отображение анализа
+        String analysis = safeString(currentDream.getAnalysis());
+        tvAnalysis.setText(analysis.isEmpty() ? "Анализ отсутствует" : analysis);
+
         // Отображение символов
         List<Symbol> symbols = currentDream.getSymbols();
         if (symbols != null && !symbols.isEmpty()) {
@@ -158,40 +161,37 @@ public class DreamDetailActivity extends AppCompatActivity {
     }
 
     private int getEmotionColor(String emotion) {
-        if (emotion == null) {
+        if ("fear".equals(emotion)) {
+            return getColor(R.color.emotion_fear);
+        } else if ("joy".equals(emotion)) {
+            return getColor(R.color.emotion_joy);
+        } else if ("sadness".equals(emotion)) {
+            return getColor(R.color.emotion_sadness);
+        } else if ("anger".equals(emotion)) {
+            return getColor(R.color.emotion_anger);
+        } else if ("surprise".equals(emotion)) {
+            return getColor(R.color.emotion_surprise);
+        } else if ("calm".equals(emotion)) {
+            return getColor(R.color.emotion_calm);
+        } else if ("love".equals(emotion)) {
+            return getColor(R.color.emotion_love);
+        } else if ("shame".equals(emotion)) {
+            return getColor(R.color.emotion_shame);
+        } else if ("despair".equals(emotion)) {
+            return getColor(R.color.emotion_despair);
+        } else {
             return getColor(R.color.text_secondary);
-        }
-
-        switch (emotion) {
-            case "fear":
-                return getColor(R.color.emotion_fear);
-            case "joy":
-                return getColor(R.color.emotion_joy);
-            case "sadness":
-                return getColor(R.color.emotion_sadness);
-            case "anger":
-                return getColor(R.color.emotion_anger);
-            case "surprise":
-                return getColor(R.color.emotion_surprise);
-            case "calm":
-                return getColor(R.color.emotion_calm);
-            case "love":
-                return getColor(R.color.emotion_love);
-            case "shame":
-                return getColor(R.color.emotion_shame);
-            case "despair":
-                return getColor(R.color.emotion_despair);
-            default:
-                return getColor(R.color.text_secondary);
         }
     }
 
+    private String safeString(String input) {
+        return input == null ? "" : input.trim();
+    }
+
     private void editDream() {
-        if (currentDream != null) {
-            Intent intent = new Intent(this, EditDreamActivity.class);
-            intent.putExtra("dream_id", currentDream.getId());
-            startActivity(intent);
-        }
+        Intent intent = new Intent(this, EditDreamActivity.class);
+        intent.putExtra("dream_id", currentDream.getId());
+        startActivity(intent);
     }
 
     private void showDeleteConfirmation() {
@@ -205,28 +205,13 @@ public class DreamDetailActivity extends AppCompatActivity {
     }
 
     private void deleteDream() {
-        if (currentDream == null) return;
-
         executor.execute(() -> {
-            try {
-                dreamDao.delete(currentDream);
+            dreamDao.delete(currentDream);
 
-                runOnUiThread(() -> {
-                    if (!isDestroyed() && !isFinishing()) {
-                        Toast.makeText(DreamDetailActivity.this, "Сон удален", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK); // Указываем, что данные изменились
-                        finish();
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    if (!isDestroyed() && !isFinishing()) {
-                        Toast.makeText(DreamDetailActivity.this, "Ошибка удаления: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Сон удален", Toast.LENGTH_SHORT).show();
+                finish();
+            });
         });
     }
 
@@ -242,7 +227,7 @@ public class DreamDetailActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (executor != null && !executor.isShutdown()) {
+        if (executor != null) {
             executor.shutdown();
         }
     }

@@ -3,9 +3,7 @@ package com.lionido.dreams_track.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Button;
-import android.view.View.OnClickListener;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,8 +25,8 @@ import java.util.concurrent.Executors;
 
 public class DreamHistoryActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private com.lionido.dreams_track.adapter.DreamAdapter dreamAdapter;
-    private List<com.lionido.dreams_track.model.Dream> dreamList;
+    private DreamAdapter dreamAdapter;
+    private List<Dream> dreamList;
     private AppDatabase database;
     private DreamDao dreamDao;
     private ExecutorService executor;
@@ -58,12 +56,7 @@ public class DreamHistoryActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         recyclerView = findViewById(R.id.recycler_dreams);
         emptyView = findViewById(R.id.layout_empty);
@@ -71,35 +64,26 @@ public class DreamHistoryActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab_add);
         if (fab != null) {
-            fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(DreamHistoryActivity.this, RecordDreamActivity.class);
-                    startActivity(intent);
-                }
+            fab.setOnClickListener(v -> {
+                Intent intent = new Intent(DreamHistoryActivity.this, RecordDreamActivity.class);
+                startActivity(intent);
             });
         }
 
         if (btnAddFirstDream != null) {
-            btnAddFirstDream.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(DreamHistoryActivity.this, RecordDreamActivity.class);
-                    startActivity(intent);
-                }
+            btnAddFirstDream.setOnClickListener(v -> {
+                Intent intent = new Intent(DreamHistoryActivity.this, RecordDreamActivity.class);
+                startActivity(intent);
             });
         }
     }
 
     private void setupRecyclerView() {
         dreamList = new ArrayList<>();
-        dreamAdapter = new com.lionido.dreams_track.adapter.DreamAdapter(dreamList, new com.lionido.dreams_track.adapter.DreamAdapter.OnDreamClickListener() {
-            @Override
-            public void onDreamClick(com.lionido.dreams_track.model.Dream dream) {
-                Intent intent = new Intent(DreamHistoryActivity.this, DreamDetailActivity.class);
-                intent.putExtra("dream_id", dream.getId());
-                startActivity(intent);
-            }
+        dreamAdapter = new DreamAdapter(dreamList, dream -> {
+            Intent intent = new Intent(DreamHistoryActivity.this, DreamDetailActivity.class);
+            intent.putExtra("dream_id", dream.getId());
+            startActivity(intent);
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -107,35 +91,59 @@ public class DreamHistoryActivity extends AppCompatActivity {
     }
 
     private void loadDreams() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
+        executor.execute(() -> {
+            try {
                 List<DreamEntity> dreams = dreamDao.getAllDreams();
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        dreamList.clear();
-                        // Преобразуем DreamEntity в Dream
-                        for (DreamEntity entity : dreams) {
-                            com.lionido.dreams_track.model.Dream dream = new com.lionido.dreams_track.model.Dream(entity.getText(), entity.getAudioPath());
-                            dream.setId(entity.getId());
-                            dream.setSymbols(entity.getSymbols());
-                            dream.setEmotion(entity.getEmotion());
-                            dreamList.add(dream);
-                        }
-                        dreamAdapter.notifyDataSetChanged();
+                runOnUiThread(() -> {
+                    dreamList.clear();
+                    // Преобразуем DreamEntity в Dream
+                    for (DreamEntity entity : dreams) {
+                        String dreamText = entity.getText() != null ? entity.getText() : "";
+                        String audioPath = entity.getAudioPath() != null ? entity.getAudioPath() : "";
 
-                        if (dreams.isEmpty()) {
-                            emptyView.setVisibility(View.VISIBLE);
-                            recyclerView.setVisibility(View.GONE);
-                        } else {
-                            emptyView.setVisibility(View.GONE);
-                            recyclerView.setVisibility(View.VISIBLE);
-                        }
+                        Dream dream = new Dream(dreamText, audioPath);
+                        dream.setId(entity.getId());
+                        dream.setTimestamp(entity.getTimestamp());
+                        dream.setSymbols(entity.getSymbols());
+                        dream.setEmotion(entity.getEmotion());
+                        dreamList.add(dream);
+                    }
+                    dreamAdapter.notifyDataSetChanged();
+
+                    if (dreams.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        recyclerView.setVisibility(View.VISIBLE);
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    if (!isDestroyed() && !isFinishing()) {
+                        // Показать ошибку или пустое состояние
+                        emptyView.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
                     }
                 });
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Перезагружаем данные при возврате в активность
+        loadDreams();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdown();
+        }
     }
 }

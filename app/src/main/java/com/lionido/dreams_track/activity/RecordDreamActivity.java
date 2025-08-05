@@ -1,11 +1,10 @@
 package com.lionido.dreams_track.activity;
 
 import android.Manifest;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.SpeechRecognizer;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -26,21 +24,29 @@ import com.lionido.dreams_track.database.AppDatabase;
 import com.lionido.dreams_track.database.DreamDao;
 import com.lionido.dreams_track.database.DreamEntity;
 import com.lionido.dreams_track.model.Symbol;
-import com.lionido.dreams_track.utils.SpeechHelper;
-import com.lionido.dreams_track.utils.NLPAnalyzer;
 import com.lionido.dreams_track.utils.EmotionDetector;
+import com.lionido.dreams_track.utils.NLPAnalyzer;
 import com.lionido.dreams_track.utils.OpenRouterAnalyzer;
+import com.lionido.dreams_track.utils.SpeechHelper;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class RecordDreamActivity extends AppCompatActivity implements SpeechHelper.OnSpeechResultListener {
-    private static final String PREFS_NAME = "DreamPrefs";
-    private static final String PREF_GEMINI_API_KEY = "gemini_api_key";
     private static final int PERMISSION_REQUEST_RECORD_AUDIO = 1;
+
+    private EditText editDreamText;
+    private FloatingActionButton btnRecord;
+    private Button btnAnalyze;
+    private Button btnSave;
+    private TextView tvStatus;
+    private TextView tvTranscript;
+    private ProgressBar progressBar;
+    private ChipGroup chipGroupInputMode;
+    private Chip chipVoice, chipText;
+    private LinearLayout layoutVoiceInput, layoutTextInput;
 
     private SpeechHelper speechHelper;
     private NLPAnalyzer nlpAnalyzer;
@@ -50,113 +56,19 @@ public class RecordDreamActivity extends AppCompatActivity implements SpeechHelp
     private DreamDao dreamDao;
     private ExecutorService executor;
 
-    private SharedPreferences prefs;
-    private String currentInputMethod = "voice";
     private String currentTranscript = "";
-
-    // UI элементы
-    private MaterialToolbar toolbar;
-    private Chip chipVoice;
-    private Chip chipText;
-    private LinearLayout layoutVoiceInput;
-    private LinearLayout layoutTextInput;
-    private TextView statusText;
-    private FloatingActionButton recordButton;
-    private EditText editTextDream;
-    private TextView transcriptText;
-    private Button analyzeButton;
-    private Button saveButton;
-    private ProgressBar progressBar;
+    private String currentInputMethod = "voice"; // "voice" или "text"
+    private boolean isRecording = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_record_dream_new); // Используем новый layout
+        setContentView(R.layout.activity_record_dream_new);
 
-        initializePreferences();
-        initializeDatabase();
-        initializeViews();
         initializeHelpers();
-        checkGeminiSetup();
-        
-        // Проверка разрешений
-        checkAudioPermission();
-    }
-
-    private void initializePreferences() {
-        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-    }
-
-    private void initializeDatabase() {
-        database = AppDatabase.getDatabase(this);
-        dreamDao = database.dreamDao();
-        executor = Executors.newFixedThreadPool(2);
-    }
-
-    private void initializeViews() {
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
-        
-        chipVoice = findViewById(R.id.chip_voice);
-        chipText = findViewById(R.id.chip_text);
-        layoutVoiceInput = findViewById(R.id.layout_voice_input);
-        layoutTextInput = findViewById(R.id.layout_text_input);
-        statusText = findViewById(R.id.tv_status);
-        recordButton = findViewById(R.id.btn_record);
-        editTextDream = findViewById(R.id.edit_dream_text);
-        transcriptText = findViewById(R.id.tv_transcript);
-        analyzeButton = findViewById(R.id.btn_analyze);
-        saveButton = findViewById(R.id.btn_save);
-        progressBar = findViewById(R.id.progress_bar);
-
-        // Установка обработчиков событий
-        chipVoice.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                switchToVoiceMode();
-            }
-        });
-
-        chipText.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                switchToTextMode();
-            }
-        });
-
-        recordButton.setOnClickListener(v -> {
-            if (statusText.getText().equals(getString(R.string.status_ready)) || 
-                statusText.getText().equals(getString(R.string.status_processing))) {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        });
-
-        editTextDream.addTextChangedListener(new android.text.TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(android.text.Editable s) {
-                currentTranscript = s.toString();
-                analyzeButton.setEnabled(!currentTranscript.trim().isEmpty());
-                transcriptText.setText(currentTranscript);
-            }
-        });
-
-        analyzeButton.setOnClickListener(v -> analyzeDream());
-        saveButton.setOnClickListener(v -> saveDream());
-
-        // Изначально кнопки анализа и сохранения неактивны
-        analyzeButton.setEnabled(false);
-        saveButton.setEnabled(false);
-
-        // По умолчанию голосовой режим
-        switchToVoiceMode();
+        initializeViews();
+        setupClickListeners();
+        checkPermissions();
     }
 
     private void initializeHelpers() {
@@ -164,16 +76,47 @@ public class RecordDreamActivity extends AppCompatActivity implements SpeechHelp
         speechHelper.setOnSpeechResultListener(this);
         nlpAnalyzer = new NLPAnalyzer(this);
         emotionDetector = new EmotionDetector();
-
-        // Инициализация OpenRouterAnalyzer
         openRouterAnalyzer = new OpenRouterAnalyzer(this);
+        database = AppDatabase.getDatabase(this);
+        dreamDao = database.dreamDao();
+        executor = Executors.newFixedThreadPool(2);
     }
 
-    private void checkGeminiSetup() {
-        // OpenRouter не требует проверки ключа, так как использует встроенный ключ    }
+    private void initializeViews() {
+        editDreamText = findViewById(R.id.edit_dream_text);
+        btnRecord = findViewById(R.id.btn_record);
+        btnAnalyze = findViewById(R.id.btn_analyze);
+        btnSave = findViewById(R.id.btn_save);
+        tvStatus = findViewById(R.id.tv_status);
+        tvTranscript = findViewById(R.id.tv_transcript);
+        progressBar = findViewById(R.id.progress_bar);
+        chipGroupInputMode = findViewById(R.id.chip_group_input_mode);
+        chipVoice = findViewById(R.id.chip_voice);
+        chipText = findViewById(R.id.chip_text);
+        layoutVoiceInput = findViewById(R.id.layout_voice_input);
+        layoutTextInput = findViewById(R.id.layout_text_input);
     }
 
-    private void checkAudioPermission() {
+    private void setupClickListeners() {
+        btnRecord.setOnClickListener(v -> toggleRecording());
+        btnAnalyze.setOnClickListener(v -> analyzeDream());
+        btnSave.setOnClickListener(v -> saveDream());
+        
+        // Обработчик выбора режима ввода
+        chipGroupInputMode.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.contains(chipVoice.getId())) {
+                layoutVoiceInput.setVisibility(View.VISIBLE);
+                layoutTextInput.setVisibility(View.GONE);
+                currentInputMethod = "voice";
+            } else if (checkedIds.contains(chipText.getId())) {
+                layoutVoiceInput.setVisibility(View.GONE);
+                layoutTextInput.setVisibility(View.VISIBLE);
+                currentInputMethod = "text";
+            }
+        });
+    }
+
+    private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -182,264 +125,250 @@ public class RecordDreamActivity extends AppCompatActivity implements SpeechHelp
         }
     }
 
-    private void switchToVoiceMode() {
-        currentInputMethod = "voice";
-        layoutVoiceInput.setVisibility(View.VISIBLE);
-        layoutTextInput.setVisibility(View.GONE);
-        statusText.setText(R.string.status_ready);
-    }
-
-    private void switchToTextMode() {
-        currentInputMethod = "text";
-        layoutVoiceInput.setVisibility(View.GONE);
-        layoutTextInput.setVisibility(View.VISIBLE);
-        statusText.setText(R.string.describe_your_dream);
-        editTextDream.requestFocus();
+    private void toggleRecording() {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
     }
 
     private void startRecording() {
-        if (SpeechRecognizer.isRecognitionAvailable(this)) {
-            speechHelper.startListening();
-            statusText.setText(R.string.status_recording);
-            recordButton.setImageResource(R.drawable.ic_mic);
-        } else {
-            statusText.setText("Распознавание речи недоступно");
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            tvStatus.setText("Распознавание речи недоступно");
+            return;
         }
+
+        speechHelper.startListening();
+        isRecording = true;
+        btnRecord.setImageResource(R.drawable.ic_mic);
+        tvStatus.setText("Говорите...");
+        currentInputMethod = "voice";
     }
 
     private void stopRecording() {
         speechHelper.stopListening();
-        statusText.setText(R.string.status_processing);
-        recordButton.setImageResource(R.drawable.ic_mic);
+        isRecording = false;
+        btnRecord.setImageResource(R.drawable.ic_mic);
+        tvStatus.setText("Обработка...");
     }
 
     @Override
     public void onSpeechResult(String result) {
         currentTranscript = result;
-        transcriptText.setText(result);
-        analyzeButton.setEnabled(!result.trim().isEmpty());
-        statusText.setText(R.string.status_ready);
+        editDreamText.setText(result);
+        tvTranscript.setText(result);
+        tvStatus.setText("Распознавание завершено");
+        btnAnalyze.setEnabled(true);
+        btnSave.setEnabled(true);
     }
 
     @Override
     public void onSpeechError(String error) {
-        statusText.setText("Ошибка: " + error);
+        tvStatus.setText("Ошибка: " + error);
+        isRecording = false;
+        btnRecord.setImageResource(R.drawable.ic_mic);
     }
-    
+
     @Override
     public void onSpeechReady() {
-        // Готовность к записи
+        tvStatus.setText("Готов к записи. Нажмите кнопку для начала.");
     }
     
     @Override
     public void onSpeechStarted() {
-        // Начало записи
+        tvStatus.setText("Запись...");
     }
     
     @Override
     public void onSpeechEnded() {
-        // Окончание записи
+        tvStatus.setText("Обработка...");
     }
 
     private void analyzeDream() {
-        if (currentTranscript.isEmpty()) return;
+        String dreamText;
+        if ("voice".equals(currentInputMethod)) {
+            dreamText = currentTranscript;
+        } else {
+            dreamText = editDreamText.getText().toString().trim();
+        }
+        
+        if (dreamText.isEmpty()) {
+            tvStatus.setText("Введите текст сна или запишите голосом");
+            return;
+        }
 
+        currentTranscript = dreamText;
         progressBar.setVisibility(View.VISIBLE);
-        analyzeButton.setEnabled(false);
+        btnAnalyze.setEnabled(false);
+        tvStatus.setText("Анализ...");
 
         executor.execute(() -> {
             try {
                 // Получаем последние 10 снов для контекста
-                List<DreamEntity> recentDreams = dreamDao.getAllDreams().stream()
-                        .limit(10)
-                        .collect(Collectors.toList());
-                
-                // Анализ символов с помощью NLP
-                List<Symbol> localSymbols = nlpAnalyzer.findSymbolsAdvanced(currentTranscript);
-                
-                // Определение эмоции локальным детектором
-                String localEmotion = emotionDetector.detectEmotion(currentTranscript);
-                
-                // Получение интерпретации от OpenRouter (если доступно)
-                String openRouterInterpretation = "";
-                List<Symbol> openRouterSymbols = new ArrayList<>();
-                String openRouterEmotion = "neutral";
-                
-                if (openRouterAnalyzer != null) {
-                    Log.d("RecordDreamActivity", "OpenRouter API инициализирован, начинаем анализ");
-                    // Создаем промпт с контекстом последних снов
-                    StringBuilder contextBuilder = new StringBuilder();
-                    contextBuilder.append("Прошлые сны:\n");
-                    for (int i = 0; i < Math.min(5, recentDreams.size()); i++) {
-                        DreamEntity dream = recentDreams.get(i);
-                        contextBuilder.append((i + 1)).append(". ").append(dream.getText()).append("\n");
-                    }
-                    
-                    // Используем асинхронный метод анализа с контекстом
-                    OpenRouterAnalyzer.DreamAnalysisResult result = analyzeDreamWithContext(currentTranscript, contextBuilder.toString(), localSymbols.size());
-                    if (result != null) {
-                        openRouterInterpretation = result.interpretation;
-                        openRouterSymbols = result.symbols;
-                        openRouterEmotion = result.emotion;
-                        Log.d("RecordDreamActivity", "Анализ OpenRouter завершен. Найдено символов: " + openRouterSymbols.size());
-                    } else {
-                        Log.e("RecordDreamActivity", "Результат анализа OpenRouter равен null");
-                        openRouterInterpretation = "Интерпретация недоступна";
-                        openRouterSymbols = new ArrayList<>();
-                        openRouterEmotion = "neutral";
-                    }
-                } else {
-                    Log.d("RecordDreamActivity", "OpenRouter API не инициализирован");
-                    openRouterInterpretation = "Интерпретация недоступна";
-                    openRouterSymbols = new ArrayList<>();
-                    openRouterEmotion = "neutral";
-                }
-                
-                // Комбинируем символы из локального анализа и OpenRouter
-                List<Symbol> combinedSymbols = new ArrayList<>(localSymbols);
-                for (Symbol openRouterSymbol : openRouterSymbols) {
-                    // Добавляем символы из OpenRouter, которых нет в локальном анализе
-                    boolean exists = false;
-                    for (Symbol localSymbol : localSymbols) {
-                        if (localSymbol.getKeyword().equals(openRouterSymbol.getKeyword())) {
-                            exists = true;
-                            break;
-                        }
-                    }
-                    if (!exists) {
-                        combinedSymbols.add(openRouterSymbol);
-                    }
+                List<DreamEntity> recentDreams = dreamDao.getRecentDreams(10);
+                StringBuilder contextBuilder = new StringBuilder();
+                for (DreamEntity dream : recentDreams) {
+                    contextBuilder.append("- ").append(dream.getText()).append("\n");
                 }
 
-                String finalOpenRouterInterpretation = openRouterInterpretation;
-                List<Symbol> finalSymbols = combinedSymbols;
-                String finalEmotion = !openRouterEmotion.equals("neutral") ? openRouterEmotion : localEmotion;
-                
+                // Проводим локальный NLP-анализ
+                List<Symbol> localSymbols = nlpAnalyzer.extractSymbols(currentTranscript);
+
+                // Получаем результат анализа с контекстом
+                OpenRouterAnalyzer.DreamAnalysisResult result = analyzeDreamWithContext(
+                        currentTranscript, contextBuilder.toString(), localSymbols.size());
+
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
-                    analyzeButton.setEnabled(true);
-                    saveButton.setEnabled(true);
-                    
-                    // Обновляем UI с результатами анализа
-                    if (finalOpenRouterInterpretation != null && !finalOpenRouterInterpretation.isEmpty()) {
-                        updateUIWithAnalysisResults(finalSymbols, finalEmotion, finalOpenRouterInterpretation, currentTranscript);
+                    btnAnalyze.setEnabled(true);
+                    tvStatus.setText("Анализ завершен");
+
+                    // Отображаем результаты анализа
+                    StringBuilder analysisResult = new StringBuilder();
+                    analysisResult.append("Анализ сна:\n\n");
+
+                    if (result.symbols != null && !result.symbols.isEmpty()) {
+                        analysisResult.append("Найденные символы:\n");
+                        for (Symbol symbol : result.symbols) {
+                            analysisResult.append("- ").append(symbol.getKeyword())
+                                    .append(" (").append(symbol.getSymbol()).append("): ")
+                                    .append(symbol.getInterpretation()).append("\n");
+                        }
                     } else {
-                        updateUIWithAnalysisResults(finalSymbols, finalEmotion, "Не удалось получить интерпретацию сна", currentTranscript);
+                        analysisResult.append("Символы не найдены\n");
                     }
+
+                    if (result.emotion != null && !result.emotion.isEmpty()) {
+                        String emotionDisplay = emotionDetector.getEmotionDisplayName(result.emotion);
+                        analysisResult.append("\nЭмоция: ").append(emotionDisplay).append("\n");
+                    }
+
+                    if (result.interpretation != null && !result.interpretation.isEmpty()) {
+                        analysisResult.append("\nИнтерпретация:\n").append(result.interpretation).append("\n");
+                    }
+
+                    tvTranscript.setText(analysisResult.toString());
+                    btnSave.setEnabled(true);
                 });
             } catch (Exception e) {
-                Log.e("RecordDreamActivity", "Ошибка анализа сна", e);
+                e.printStackTrace();
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
-                    analyzeButton.setEnabled(true);
-                    statusText.setText("Ошибка анализа: " + e.getMessage());
+                    btnAnalyze.setEnabled(true);
+                    tvStatus.setText("Ошибка анализа: " + e.getMessage());
                 });
             }
         });
     }
 
-    // Метод для обновления UI с результатами анализа
-    private void updateUIWithAnalysisResults(List<Symbol> symbols, String emotion, String interpretation, String originalText) {
-        // Показываем результаты в transcriptText
-        StringBuilder result = new StringBuilder();
-        result.append("Анализ сна:\n\n");
-        
-        result.append("Эмоциональный фон: ").append(getEmotionDisplayName(emotion)).append("\n\n");
-        
-        result.append("Найденные символы:\n");
-        if (symbols.isEmpty()) {
-            result.append("  Символы не найдены\n");
+    private void saveDream() {
+        String dreamText;
+        if ("voice".equals(currentInputMethod)) {
+            dreamText = currentTranscript;
         } else {
-            for (Symbol symbol : symbols) {
-                result.append("  • ").append(symbol.getKeyword()).append(": ").append(symbol.getInterpretation()).append("\n");
+            dreamText = editDreamText.getText().toString().trim();
+        }
+        
+        if (dreamText.isEmpty()) {
+            tvStatus.setText("Введите текст сна или запишите голосом");
+            return;
+        }
+
+        currentTranscript = dreamText;
+
+        progressBar.setVisibility(View.VISIBLE);
+        btnSave.setEnabled(false);
+        tvStatus.setText("Анализ и сохранение...");
+
+        executor.execute(() -> {
+            try {
+                // Получаем последние 10 снов для контекста
+                List<DreamEntity> recentDreams = dreamDao.getRecentDreams(10);
+                StringBuilder contextBuilder = new StringBuilder();
+                for (DreamEntity dream : recentDreams) {
+                    contextBuilder.append("- ").append(dream.getText()).append("\n");
+                }
+
+                // Проводим локальный NLP-анализ
+                List<Symbol> localSymbols = nlpAnalyzer.extractSymbols(currentTranscript);
+
+                // Получаем результат анализа с контекстом
+                OpenRouterAnalyzer.DreamAnalysisResult result = analyzeDreamWithContext(
+                        currentTranscript, contextBuilder.toString(), localSymbols.size());
+
+                // Создаем сущность сна
+                DreamEntity dream = new DreamEntity(currentTranscript, "", currentInputMethod);
+
+                // Устанавливаем символы (из анализа с контекстом)
+                if (result.symbols != null && !result.symbols.isEmpty()) {
+                    dream.setSymbols(result.symbols);
+                } else if (localSymbols != null && !localSymbols.isEmpty()) {
+                    dream.setSymbols(localSymbols);
+                }
+
+                // Устанавливаем эмоцию
+                if (result.emotion != null && !result.emotion.isEmpty()) {
+                    dream.setEmotion(result.emotion);
+                } else {
+                    // Определяем эмоцию локально, если не получили от ИИ
+                    String emotion = emotionDetector.detectEmotion(currentTranscript);
+                    dream.setEmotion(emotion);
+                }
+
+                // Устанавливаем интерпретацию
+                if (result.interpretation != null && !result.interpretation.isEmpty()) {
+                    dream.setInterpretation(result.interpretation);
+                } else {
+                    // Генерируем локальную интерпретацию, если не получили от ИИ
+                    String interpretation = generateLocalInterpretation(currentTranscript,
+                            dream.getSymbols() != null ? dream.getSymbols() : new ArrayList<>());
+                    dream.setInterpretation(interpretation);
+                }
+
+                // Устанавливаем анализ
+                String analysis = generateAnalysis(currentTranscript,
+                        dream.getSymbols() != null ? dream.getSymbols() : new ArrayList<>(),
+                        dream.getEmotion());
+                dream.setAnalysis(analysis);
+
+                // Сохраняем сон в базе данных
+                dreamDao.insert(dream);
+
+                runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    btnSave.setEnabled(true);
+                    tvStatus.setText("Сон успешно сохранен!");
+                    // Закрываем активность через 1 секунду
+                    new Handler().postDelayed(this::finish, 1000);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    btnSave.setEnabled(true);
+                    tvStatus.setText("Ошибка сохранения: " + e.getMessage());
+                });
             }
-        }
-        
-        result.append("\n");
-        
-        if (!interpretation.isEmpty() && !interpretation.equals("Интерпретация недоступна") && !interpretation.equals("Анализ выполнен базовыми алгоритмами.")) {
-            result.append("Интерпретация: ").append(interpretation).append("\n");
-        } else {
-            // Создаем базовую интерпретацию на основе найденных символов
-            result.append("Интерпретация: ").append(createBasicInterpretation(symbols, emotion, originalText)).append("\n");
-        }
-        
-        transcriptText.setText(result.toString());
+        });
     }
-    
-    // Метод для получения отображаемого имени эмоции
-    private String getEmotionDisplayName(String emotionCode) {
-        switch (emotionCode) {
-            case "fear": return "Страх";
-            case "joy": return "Радость";
-            case "sadness": return "Грусть";
-            case "anger": return "Гнев";
-            case "surprise": return "Удивление";
-            case "calm": return "Спокойствие";
-            case "love": return "Любовь";
-            case "shame": return "Стыд";
-            case "despair": return "Отчаяние";
-            default: return "Нейтральное";
-        }
-    }
-    
-    // Метод для создания базовой интерпретации на основе найденных символов
-    private String createBasicInterpretation(List<Symbol> symbols, String emotion, String originalText) {
+
+    // Метод для генерации локальной интерпретации (резервный вариант)
+    private String generateLocalInterpretation(String originalText, List<Symbol> symbols) {
         StringBuilder interpretation = new StringBuilder();
-        
-        if (!symbols.isEmpty()) {
-            // Если найдены символы, создаем интерпретацию на основе них
-            interpretation.append("В вашем сне присутствуют следующие ключевые символы: ");
+        interpretation.append("Локальный анализ: ");
+
+        if (symbols != null && !symbols.isEmpty()) {
+            // Если есть символы, анализируем их
+            interpretation.append("Найдены следующие символы: ");
             for (int i = 0; i < Math.min(3, symbols.size()); i++) {
-                if (i > 0) interpretation.append(", ");
-                interpretation.append(symbols.get(i).getKeyword());
-            }
-            interpretation.append(". ");
-            
-            // Анализируем преобладающую эмоцию
-            switch (emotion) {
-                case "fear":
-                    interpretation.append("Это может указывать на ваши тревоги и страхи в реальной жизни. ");
-                    break;
-                case "joy":
-                    interpretation.append("Это отражает ваше внутреннее спокойствие и удовлетворенность жизнью. ");
-                    break;
-                case "sadness":
-                    interpretation.append("Это может быть связано с переживаниями утраты или неудовлетворенности. ");
-                    break;
-                case "anger":
-                    interpretation.append("Это может указывать на внутреннее напряжение или подавленное раздражение. ");
-                    break;
-                case "surprise":
-                    interpretation.append("Это может отражать неожиданные события или перемены в вашей жизни. ");
-                    break;
-                case "calm":
-                    interpretation.append("Это указывает на ваше стремление к гармонии и внутреннему балансу. ");
-                    break;
-                case "love":
-                    interpretation.append("Это отражает потребность в любви, близости или эмоциональной связи. ");
-                    break;
-                case "shame":
-                    interpretation.append("Это может быть связано с чувством вины или стыда за что-то. ");
-                    break;
-                case "despair":
-                    interpretation.append("Это может указывать на чувство безысходности или глубокую утрату. ");
-                    break;
-                default:
-                    interpretation.append("Эмоциональный фон сна требует вашего личного осмысления. ");
-                    break;
-            }
-            
-            // Добавляем анализ каждого символа
-            interpretation.append("В частности: ");
-            for (int i = 0; i < Math.min(2, symbols.size()); i++) {
                 Symbol symbol = symbols.get(i);
-                interpretation.append(symbol.getKeyword()).append(" - ").append(symbol.getInterpretation().toLowerCase()).append("; ");
+                interpretation.append(symbol.getKeyword()).append(" - ").append(symbol.getInterpretation()).append("; ");
             }
         } else {
             // Если символы не найдены, анализируем по ключевым словам в тексте
             String lowerText = originalText.toLowerCase();
-            
+
             // Анализируем ключевые слова и создаем интерпретацию
             if (lowerText.contains("летать") || lowerText.contains("полет") || lowerText.contains("летел")) {
                 interpretation.append("Сон о полете часто указывает на стремление к свободе, независимости или желание выйти за рамки текущих ограничений. ");
@@ -466,14 +395,59 @@ public class RecordDreamActivity extends AppCompatActivity implements SpeechHelp
                 interpretation.append("В вашем сне не выделены явные символы, но обратите внимание на общее эмоциональное состояние, которое вы испытывали во сне. ");
                 interpretation.append("Попробуйте вспомнить, какие события предшествовали сну и какие чувства он вызвал. ");
             }
-            
-            // Добавляем общие рекомендации
-            interpretation.append("Старайтесь вспомнить свои чувства во сне - они могут дать важные подсказки о его значении. ");
         }
-        
+
         // Добавляем заключение
         interpretation.append("Помните, что значение сна индивидуально и зависит от вашего личного контекста и переживаний.");
         return interpretation.toString();
+    }
+
+    // Метод для генерации анализа сна
+    private String generateAnalysis(String originalText, List<Symbol> symbols, String emotion) {
+        StringBuilder result = new StringBuilder();
+        result.append("Анализ сна:\n\n");
+
+        // Добавляем информацию о символах
+        if (symbols != null && !symbols.isEmpty()) {
+            result.append("Найденные символы:\n");
+            for (Symbol symbol : symbols) {
+                result.append("- ").append(symbol.getKeyword())
+                        .append(" (").append(symbol.getSymbol()).append("): ")
+                        .append(symbol.getInterpretation()).append("\n");
+            }
+        } else {
+            result.append("Символы не найдены\n");
+        }
+
+        // Добавляем информацию об эмоциях
+        result.append("\n");
+        if (emotion != null && !emotion.isEmpty()) {
+            String emotionDisplay = emotionDetector.getEmotionDisplayName(emotion);
+            result.append("Эмоциональный фон: ").append(emotionDisplay).append("\n");
+        } else {
+            result.append("Эмоциональный фон не определен\n");
+        }
+
+        // Добавляем анализ текста
+        result.append("\nАнализ текста:\n");
+        String lowerText = originalText.toLowerCase();
+
+        // Анализируем длину сна
+        int wordCount = originalText.split("\\s+").length;
+        result.append("- Длина сна: ").append(wordCount).append(" слов\n");
+
+        // Анализируем ключевые темы
+        if (lowerText.contains("летать") || lowerText.contains("полет") || lowerText.contains("летел")) {
+            result.append("- Тема полета: указывает на стремление к свободе\n");
+        }
+        if (lowerText.contains("вода") || lowerText.contains("море") || lowerText.contains("река") || lowerText.contains("озеро")) {
+            result.append("- Тема воды: связано с эмоциональным состоянием\n");
+        }
+        if (lowerText.contains("погоня") || lowerText.contains("преследуют") || lowerText.contains("преследовать")) {
+            result.append("- Тема погони: может указывать на избегание чего-то\n");
+        }
+
+        return result.toString();
     }
 
     // Метод для анализа сна с контекстом последних снов
@@ -488,7 +462,7 @@ public class RecordDreamActivity extends AppCompatActivity implements SpeechHelp
                             "Обязательно найди еще " + symbolsNeeded + " символа(ов) из текста сна и добавь их в результат. " +
                             "Общее количество символов должно быть не менее 3.\n\n";
                 }
-                
+
                 String prompt = "Проанализируй следующий сон с учетом контекста прошлых снов:\n\n" +
                         "Контекст прошлых снов:\n" + context + "\n\n" +
                         "Текущий сон для анализа: \"" + dreamText + "\"\n\n" +
@@ -518,16 +492,16 @@ public class RecordDreamActivity extends AppCompatActivity implements SpeechHelp
                         "- Используй двойные кавычки для строк\n" +
                         "- В поле interpretation ОБЯЗАТЕЛЬНО включи предположение о причинах сна, даже если чувства не упомянуты\n" +
                         "- В интерпретации указывай возможные связи с реальной жизнью человека и контекстом прошлых снов\n";
-                
+
                 // Отправляем запрос напрямую через OpenRouterAnalyzer
                 String response = openRouterAnalyzer.sendOpenRouterRequest(prompt);
                 openRouterAnalyzer.logOpenRouterInteraction("Анализ сна с контекстом", prompt, response);
                 return openRouterAnalyzer.parseOpenRouterResponse(response);
             } catch (Exception e) {
                 // В случае ошибки используем резервный анализ
-                openRouterAnalyzer.logOpenRouterInteraction("Ошибка анализа с контекстом", 
-                    "dreamText: " + dreamText + ", context: " + context, 
-                    "error: " + e.getMessage());
+                openRouterAnalyzer.logOpenRouterInteraction("Ошибка анализа с контекстом",
+                        "dreamText: " + dreamText + ", context: " + context,
+                        "error: " + e.getMessage());
                 return openRouterAnalyzer.getFallbackAnalysis(dreamText);
             }
         } else {
@@ -540,38 +514,12 @@ public class RecordDreamActivity extends AppCompatActivity implements SpeechHelp
         }
     }
 
-    private void saveDream() {
-        if (currentTranscript.isEmpty()) return;
-
-        progressBar.setVisibility(View.VISIBLE);
-        saveButton.setEnabled(false);
-
-        executor.execute(() -> {
-            try {
-                DreamEntity dream = new DreamEntity(currentTranscript, "", currentInputMethod);
-                dreamDao.insert(dream);
-
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    // Показать сообщение об успешном сохранении
-                    // finish(); // Закрыть активность и вернуться к предыдущей
-                });
-            } catch (Exception e) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    saveButton.setEnabled(true);
-                    statusText.setText("Ошибка сохранения: " + e.getMessage());
-                });
-            }
-        });
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_RECORD_AUDIO) {
             if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                statusText.setText("Нет разрешения на запись аудио");
+                tvStatus.setText("Нет разрешения на запись аудио");
             }
         }
     }

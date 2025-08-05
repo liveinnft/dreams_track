@@ -132,8 +132,8 @@ public class AtlasActivity extends AppCompatActivity {
                         List<Symbol> symbols = dream.getSymbols();
                         if (symbols != null) {
                             for (Symbol symbol : symbols) {
-                                if (symbol != null && symbol.getKeyword() != null) {
-                                    String keyword = symbol.getKeyword();
+                                if (symbol != null && symbol.getKeyword() != null && !symbol.getKeyword().trim().isEmpty()) {
+                                    String keyword = symbol.getKeyword().trim();
                                     symbolFrequency.put(keyword,
                                             symbolFrequency.getOrDefault(keyword, 0) + 1);
                                 }
@@ -141,7 +141,7 @@ public class AtlasActivity extends AppCompatActivity {
                         }
 
                         // Также анализируем текст сна на ключевые слова
-                        if (dream.getText() != null) {
+                        if (dream.getText() != null && !dream.getText().trim().isEmpty()) {
                             analyzeTextForKeywords(dream.getText(), symbolFrequency);
                         }
                     }
@@ -167,8 +167,10 @@ public class AtlasActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Ошибка загрузки данных: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    if (!isDestroyed() && !isFinishing()) {
+                        Toast.makeText(AtlasActivity.this, "Ошибка загрузки данных: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 });
             }
         });
@@ -202,7 +204,7 @@ public class AtlasActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (executor != null) {
+        if (executor != null && !executor.isShutdown()) {
             executor.shutdown();
         }
     }
